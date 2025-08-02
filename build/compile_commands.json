@@ -1,0 +1,32 @@
+[
+{
+  "directory": "D:/Computation/FluidSim/CPP_Sim/build",
+  "command": "D:\\App\\Tool_App\\MSYS2\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\main.dir\\main.cpp.obj -c D:\\Computation\\FluidSim\\CPP_Sim\\main.cpp",
+  "file": "D:/Computation/FluidSim/CPP_Sim/main.cpp",
+  "output": "CMakeFiles/main.dir/main.cpp.obj"
+},
+{
+  "directory": "D:/Computation/FluidSim/CPP_Sim/build",
+  "command": "D:\\App\\Tool_App\\MSYS2\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\main.dir\\Grid_Construction\\vector3D.cpp.obj -c D:\\Computation\\FluidSim\\CPP_Sim\\Grid_Construction\\vector3D.cpp",
+  "file": "D:/Computation/FluidSim/CPP_Sim/Grid_Construction/vector3D.cpp",
+  "output": "CMakeFiles/main.dir/Grid_Construction/vector3D.cpp.obj"
+},
+{
+  "directory": "D:/Computation/FluidSim/CPP_Sim/build",
+  "command": "D:\\App\\Tool_App\\MSYS2\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\main.dir\\Boundary\\SolidBoundary.cpp.obj -c D:\\Computation\\FluidSim\\CPP_Sim\\Boundary\\SolidBoundary.cpp",
+  "file": "D:/Computation/FluidSim/CPP_Sim/Boundary/SolidBoundary.cpp",
+  "output": "CMakeFiles/main.dir/Boundary/SolidBoundary.cpp.obj"
+},
+{
+  "directory": "D:/Computation/FluidSim/CPP_Sim/build",
+  "command": "D:\\App\\Tool_App\\MSYS2\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\main.dir\\Scene\\SceneManager.cpp.obj -c D:\\Computation\\FluidSim\\CPP_Sim\\Scene\\SceneManager.cpp",
+  "file": "D:/Computation/FluidSim/CPP_Sim/Scene/SceneManager.cpp",
+  "output": "CMakeFiles/main.dir/Scene/SceneManager.cpp.obj"
+},
+{
+  "directory": "D:/Computation/FluidSim/CPP_Sim/build",
+  "command": "D:\\App\\Tool_App\\MSYS2\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\main.dir\\Solver\\solver.cpp.obj -c D:\\Computation\\FluidSim\\CPP_Sim\\Solver\\solver.cpp",
+  "file": "D:/Computation/FluidSim/CPP_Sim/Solver/solver.cpp",
+  "output": "CMakeFiles/main.dir/Solver/solver.cpp.obj"
+}
+]

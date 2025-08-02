@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/Computation/FluidSim/CPP_Sim/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

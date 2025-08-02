@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cmath>
 namespace Solver {
+    //计算MACGrid的离散散度
+    Grid<float> discrete_divergence(const MACGrid& grid);
     //基本的向量操作
     //dot product
     float dotProduct(const Grid<float>& a, const Grid<float>& b, const Grid<CellType>&cellTypes);
@@ -57,6 +59,13 @@ namespace Solver {
         Grid<float> Aplus_j;
         Grid<float> Aplus_k;
         Grid<float> precon;
+        SystemMatrix(int nx, int ny, int nz) :
+            Adiag(nx, ny, nz, 0.0f),
+            Aplus_i(nx, ny, nz, 0.0f),
+            Aplus_j(nx, ny, nz, 0.0f),
+            Aplus_k(nx, ny, nz, 0.0f),
+            precon(nx, ny, nz, 0.0f)
+        {}
     };
     void PCG(
         Grid<float>& p,
