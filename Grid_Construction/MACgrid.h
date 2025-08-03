@@ -63,6 +63,13 @@ private:
             (static_cast<float>(k) + 0.5f) * dx
         );
     }
+    Vector3D positionOfU(int i, int j, int k) const {
+        return Vector3D(
+            static_cast<float>(i) * dx,
+            (static_cast<float>(j) + 0.5f) * dx,
+            (static_cast<float>(k) + 0.5f) * dx
+        );
+    }
     Vector3D positionOfV(int i, int j, int k) const{
         return Vector3D(
             (static_cast<float>(i) + 0.5f) * dx,

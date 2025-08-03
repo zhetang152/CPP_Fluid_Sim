@@ -1,4 +1,5 @@
 #include"Vector3D.h"
+#include <cassert>
 
 Vector3D Vector3D::operator+(const Vector3D& other)const{
     return Vector3D(x+other.x,y+other.y,z+other.z);
@@ -8,6 +9,10 @@ Vector3D Vector3D::operator-(const Vector3D& other)const{
 }
 Vector3D Vector3D::operator*(float scalar)const{
     return Vector3D(x*scalar,y*scalar,z*scalar);
+}
+Vector3D Vector3D::operator/(float scalar) const{
+    assert(std::abs(scalar) > 1e-9f);
+    return (*this) * (1.0f / scalar);
 }
 
 float Vector3D::length() const{

@@ -12,6 +12,7 @@ public:
     Vector3D operator+(const Vector3D& other) const;
     Vector3D operator-(const Vector3D& other) const;
     Vector3D operator*(float scalar) const;
+    Vector3D operator/(float scalar) const;
     //成员函数
     //点积
     float dot(const Vector3D& other) const;

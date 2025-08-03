@@ -18,7 +18,7 @@ void apply_pressure_gardient(MACGrid& grid, float dt){
     //更新速度u
     for (int k = 0; k < nz; ++k) {
         for (int j = 0; j < ny; ++j) {
-            for (int i = 0; i < nx; ++i) {
+            for (int i = 1; i < nx; ++i) {
                 if (celltypes(i, j, k) == CellType::FLUID || celltypes(i-1, j, k) == CellType::FLUID) {
                     u(i, j, k) -= scale * (pressure(i, j, k) - pressure(i - 1, j, k));
                 }
@@ -27,7 +27,7 @@ void apply_pressure_gardient(MACGrid& grid, float dt){
     }
     //更新速度v
     for (int k = 0; k < nz; ++k) {
-        for (int j = 0; j < ny; ++j) {
+        for (int j = 1; j < ny; ++j) {
             for (int i = 0; i < nx; ++i) {
                 if (celltypes(i, j, k) == CellType::FLUID || celltypes(i, j-1, k) == CellType::FLUID) {
                     v(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j - 1, k));
@@ -36,7 +36,7 @@ void apply_pressure_gardient(MACGrid& grid, float dt){
         }
     }
     //更新速度w
-    for (int k = 0; k < nz; ++k) {
+    for (int k = 1; k < nz; ++k) {
         for (int j = 0; j < ny; ++j) {
             for (int i = 0; i < nx; ++i) {
                 if (celltypes(i, j, k) == CellType::FLUID || celltypes(i, j, k-1) == CellType::FLUID) {
@@ -57,7 +57,7 @@ int main(){
     const int max_iterations = 200; //最大迭代次数
     const float tolerance = 1e-5f; //收敛容忍度
     //2. 设置场景
-    SceneManager::createFishTank(grid, resolution);
+    SceneManager::createFishTank(grid, 0.5f); 
     grid.u()(resolution / 2, resolution / 2, resolution / 2) = 1.0f; //设置初始速度u
     grid.v()(resolution / 2, resolution / 2, resolution / 2) = -2.0f; //设置初始速度v
     //3. 主模拟循环
