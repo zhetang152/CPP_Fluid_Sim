@@ -22,7 +22,7 @@
 
 * **Incompressible: Solver**
 
-    * 初步建立简单边界(即任意网格中仅存在一种物体形态)情形的求解器, 通过离散化压力梯度以及散度离散, 得到压力Poisson方程 $-\Delta t /\rho \nabla \cdot \nabla p=-\nabla \cdot  \vec{u}$ 及其离散格式 :
+    * 初步建立简单边界(即任意网格中仅存在唯一物体形态)情形的求解器, 通过离散化压力梯度以及散度离散, 得到压力Poisson方程 $-\Delta t /\rho \nabla \cdot \nabla p=-\nabla \cdot  \vec{u}$ 及其离散格式 :
 ```math
    \begin{split}
    \frac{\Delta t}{\rho} \left( \frac{\begin{gathered} 6p_{i,j,k} - p_{i+1,j,k} - p_{i,j+1,k} - p_{i,j,k+1} \\ - p_{i-1,j,k} - p_{i,j-1,k} - p_{i,j,k-1} \end{gathered}}{\Delta x^2} \right) & = -\left( \begin{gathered} \frac{u_{i+1/2,j,k} - u_{i-1/2,j,k}}{\Delta x} + \frac{v_{i,j+1/2,k} - v_{i,j-1/2,k}}{\Delta x} \\ + \frac{w_{i,j,k+1/2} - w_{i,j,k-1/2}}{\Delta x} \end{gathered} \right).
