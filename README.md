@@ -23,13 +23,13 @@
 * **Incompressible: Solver**
 
     * 初步建立简单边界(即任意网格中仅存在一种物体形态)情形的求解器, 通过离散化压力梯度以及散度离散, 得到压力Poisson方程 $-\Delta t /\rho \nabla \cdot \nabla p=-\nabla \cdot  \vec{u}$ 及其离散格式 :
-  ```math
+```math
 \begin{split}
 \frac{\Delta t}{\rho} \nabla \cdot \nabla p &= - \nabla \cdot \vec{u} \text{及其离散格式,}\\
 \frac{\Delta t}{\rho} \left( \frac{1}{(\Delta x)^2}(6p_{i,j,k} - p_{i+1,j,k} - p_{i-1,j,k} - p_{i,j+1,k} - p_{i,j-1,k} - p_{i,j,k+1} - p_{i,j,k-1}) \right) \\
 &= - \left( \frac{u_{i+1/2,j,k} - u_{i-1/2,j,k}}{\Delta x} + \frac{v_{i,j+1/2,k} - v_{i,j-1/2,k}}{\Delta x} + \frac{w_{i,j,k+1/2} - w_{i,j,k-1/2}}{\Delta x} \right)
 \end{split}
-
+```
     * 根据离散形式, 我们可抽象出 $Ap=b$ 的大型稀疏线性方程系统. 并且得知 $A$ (在一般情况下)是对称正定矩阵, 少部分情况下是对称半正定矩阵. 对此, 求解器实现了bridson书中的MICCG(0)(零级修正不完全Cholesky共轭梯度法(modified incomplete Cholesky conjugate gradient, level zero))算法.
 
        算法简介: 该算法以PCG为求解主线, 并构建$A$的稀疏Cholesky因子作为预处理器, 加快收敛速度.
