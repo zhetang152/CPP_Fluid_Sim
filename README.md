@@ -1,6 +1,6 @@
 # 利用CPP构建流体模拟求解器(持续更新)
 
-## 关于项目(About The Project)
+## 关于项目
 
 本项目是学习Robert Bridson的《Fluid Simulation for Computer Graphics》一书的实践成果. 旨在使用现代C++从零开始，逐步构建3D流体模拟引擎. 部分代码由AI工具Gemini, Copilot协助完成.
 
