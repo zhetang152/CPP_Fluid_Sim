@@ -1,7 +1,7 @@
 #pragma once
 #include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\MACGrid.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\grid.h"
-
+#include "D:\Computation\FluidSim\CPP_Sim\Scene\Geometry\SolidShape.h"
 namespace Advector {
     /**
      * @brief 半Lagrange平流方程
@@ -12,4 +12,5 @@ namespace Advector {
      */
     Grid<float> advect(const Grid<float>& q_old, const MACGrid& velocityGrid, float dt);
     void advect_velocity(MACGrid& grid, float dt);
+    void advect_particles(MACGrid& grid, const SolidShape& solid, float dt);
 }

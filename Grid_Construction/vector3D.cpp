@@ -31,3 +31,7 @@ Vector3D& Vector3D::normalize(){
 float Vector3D::dot(const Vector3D& other)const{
     return Vector3D::x*other.x+Vector3D::y*other.y+Vector3D::z*other.z;
 }
+Vector3D operator*(float scalar, const Vector3D& vec) {
+    // 直接调用已有的成员函数，实现代码复用
+    return vec * scalar;
+}

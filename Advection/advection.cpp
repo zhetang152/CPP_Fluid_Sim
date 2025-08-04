@@ -152,22 +152,32 @@ namespace Advector {
         }
     }
 
-    void advect_particles(MACGrid& grid, float dt) {
+    void advect_particles(MACGrid& grid, const SolidShape& solid, float dt) {
         auto& particles = grid.particles();
-        float dx = grid.getDx();
-        float domain_x = grid.getDimX() * dx;
-        float domain_y = grid.getDimY() * dx;
-        float domain_z = grid.getDimZ() * dx;
+        // 定义一个很小的安全距离，防止粒子正好卡在表面
+        const float particle_radius = grid.getDx() * 0.1f;
+        for (auto& particle : particles) {
+            Vector3D velocity = get_velocity_at(grid, particle);
+            Vector3D new_position = particle + velocity * dt;
 
-        for (auto& p : particles) {
-            Vector3D vel = get_velocity_at(grid, p);
-            p = p + vel * dt;
-
-            // 简单的边界碰撞处理
-            p.x = std::clamp(p.x, dx, domain_x - dx);
-            p.y = std::clamp(p.y, dx, domain_y - dx);
-            p.z = std::clamp(p.z, dx, domain_z - dx);
+            // 新的SDF碰撞处理逻辑
+            float phi = solid.signedDistance(new_position);
+            //安全距离检查
+            if (phi < particle_radius) {
+                // 如果新位置在SDF内，使用SDF的法线来调整位置
+                Vector3D normal = solid.normal(new_position);
+                particle = new_position + normal * (particle_radius - phi);
+            }else{
+                particle = new_position;
+            }
+            // 4. (可选但推荐) 保留对整个模拟区域边界的钳制，作为最后的保险
+            float dx = grid.getDx();
+            float domain_x = grid.getDimX() * dx;
+            float domain_y = grid.getDimY() * dx;
+            float domain_z = grid.getDimZ() * dx;
+            particle.x = std::clamp(particle.x, dx, domain_x - dx);
+            particle.y = std::clamp(particle.y, dx, domain_y - dx);
+            particle.z = std::clamp(particle.z, dx, domain_z - dx);
         }
     }
-
-} // namespace Advector
+}

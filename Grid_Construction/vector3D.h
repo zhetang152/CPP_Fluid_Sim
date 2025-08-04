@@ -20,4 +20,6 @@ public:
     float length() const;
     //单位化向量
     Vector3D& normalize();
+    //  
 };
+Vector3D operator*(float scalar, const Vector3D& vec);
