@@ -1,7 +1,7 @@
 #pragma once
 #include<vector>
 #include<cassert>
-
+#include<algorithm>
 template<typename T>
 class Grid{
 private:
@@ -25,6 +25,9 @@ public:
         assert(j >= 0 && j < m_height && "Grid3D access out of bounds (j)");
         assert(k >= 0 && k < m_depth  && "Grid3D access out of bounds (k)");
         return m_data[i + j * m_width + k * m_width * m_height];
+    }
+    void fill(const T& value) {
+        std::fill(m_data.begin(), m_data.end(), value);
     }
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }

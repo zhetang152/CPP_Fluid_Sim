@@ -10,6 +10,7 @@ namespace Advector {
      * @param dt 时间步长
      * @return 新的标量场 
      */
+    Vector3D get_velocity_at(const MACGrid& grid, const Vector3D& pos);
     Grid<float> advect(const Grid<float>& q_old, const MACGrid& velocityGrid, float dt);
     void advect_velocity(MACGrid& grid, float dt);
     void advect_particles(MACGrid& grid, const SolidShape& solid, float dt);

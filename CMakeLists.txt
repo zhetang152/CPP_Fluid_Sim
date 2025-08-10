@@ -16,6 +16,7 @@ set(SOURCES
     Scene/SceneManager.cpp
     Solver/solver.cpp
     Advection/advection.cpp
+    Advection/FLIP.cpp
     IO/DataExporter.cpp
     Force/General_Force/GravityForce.cpp
 )
