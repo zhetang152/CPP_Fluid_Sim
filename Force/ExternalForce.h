@@ -1,5 +1,5 @@
 #pragma once
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\MACGrid.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
 
 class ExternalForce {
 public:

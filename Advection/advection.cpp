@@ -157,27 +157,34 @@ namespace Advector {
         // 定义一个很小的安全距离，防止粒子正好卡在表面
         const float particle_radius = grid.getDx() * 0.1f;
         for (auto& particle : particles) {
-            Vector3D velocity = get_velocity_at(grid, particle);
-            Vector3D new_position = particle + velocity * dt;
-
-            // 新的SDF碰撞处理逻辑
-            float phi = solid.signedDistance(new_position);
-            //安全距离检查
+            //RK3
+            //k1 = u(x_n)
+            Vector3D k1 = get_velocity_at(grid, particle.position);
+            //k2 = u(x_n + 0.5 * dt * k1)
+            Vector3D mid_pos1 = particle.position + 0.5f * dt * k1;
+            Vector3D k2 = get_velocity_at(grid, mid_pos1);
+            //k3 = u(x_n + 0.75 * dt * k2)
+            Vector3D mid_pos2 = particle.position + 0.75f * dt * k2;
+            Vector3D k3 = get_velocity_at(grid, mid_pos2);
+            //x_{n+1} = x_n + dt * (2/9 * k1 + 1/3 * k2 + 4/9 * k3)
+            Vector3D new_pos = particle.position + dt * ( (2.0f/9.0f) * k1 + (1.0f/3.0f) * k2 + (4.0f/9.0f) * k3);
+            //碰撞检测
+            float phi = solid.signedDistance(new_pos);
             if (phi < particle_radius) {
-                // 如果新位置在SDF内，使用SDF的法线来调整位置
-                Vector3D normal = solid.normal(new_position);
-                particle = new_position + normal * (particle_radius - phi);
+                //粒子进入固体，投射到表面
+                Vector3D normal = solid.normal(new_pos);
+                particle.position = new_pos + (particle_radius - phi) * normal;
             }else{
-                particle = new_position;
+                particle.position = new_pos;
             }
-            // 4. (可选但推荐) 保留对整个模拟区域边界的钳制，作为最后的保险
+            //边界钳制
             float dx = grid.getDx();
             float domain_x = grid.getDimX() * dx;
             float domain_y = grid.getDimY() * dx;
             float domain_z = grid.getDimZ() * dx;
-            particle.x = std::clamp(particle.x, dx, domain_x - dx);
-            particle.y = std::clamp(particle.y, dx, domain_y - dx);
-            particle.z = std::clamp(particle.z, dx, domain_z - dx);
+            particle.position.x = std::clamp(particle.position.x, particle_radius, domain_x - particle_radius);
+            particle.position.y = std::clamp(particle.position.y, particle_radius, domain_y - particle_radius);
+            particle.position.z = std::clamp(particle.position.z, particle_radius, domain_z - particle_radius);
         }
     }
 }

@@ -6,7 +6,7 @@
 #include<ctime>//用于time()
 #include<iomanip>//格式化
 #include<sstream>
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\MACGrid.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Scene\SceneManager.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Boundary\SolidBoundary.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Solver\solver.h"

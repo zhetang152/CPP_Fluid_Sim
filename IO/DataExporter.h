@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\MACGrid.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
 namespace DataExporter {
     /**
      * @brief 导出网格数据到.obj文件

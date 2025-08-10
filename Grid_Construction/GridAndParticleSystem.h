@@ -7,7 +7,11 @@ enum class CellType{
     FLUID,
     SOLID
 };
-
+struct Particles{
+    /* data */
+    Vector3D position;
+    Vector3D velocity;
+};
 class MACGrid{
 private:
     int x,y,z;
@@ -21,7 +25,7 @@ private:
     Grid<float> m_liquid_phi; //液体的SDF
     Grid<float> m_volume_fractions;//体积分数
     Grid<float> m_area_u, m_area_v, m_area_w; //用于计算速度的开放面积分数
-    std::vector<Vector3D> m_marker_particles; //用于标记粒子位置的向量
+    std::vector<Particles> m_particles; //用于标记粒子位置的向量
     Grid<float> m_density;
     public:
     MACGrid(int tx, int ty, int tz, float initial_dx):
@@ -50,8 +54,8 @@ private:
     
     Grid<Vector3D>& solidvelocity() { return m_solidvelocity; }
     const Grid<Vector3D>& solidvelocity() const { return m_solidvelocity; }
-    std::vector<Vector3D>& particles() { return m_marker_particles; }
-    const std::vector<Vector3D>& particles() const { return m_marker_particles; }
+    std::vector<Particles>& particles() { return m_particles; }
+    const std::vector<Particles>& particles() const { return m_particles; }
     Grid<float>& volumeFractions() { return m_volume_fractions; }
     const Grid<float>& volumeFractions() const { return m_volume_fractions; }
     Grid<float>& area_u() { return m_area_u; }

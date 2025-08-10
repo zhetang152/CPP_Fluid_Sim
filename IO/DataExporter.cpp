@@ -18,7 +18,7 @@ namespace DataExporter
         outfile << "# Total particles: " << particals.size() <<"\n";
         //遍历粒子
         for (const auto& particle : particals) {
-            outfile << "v " << particle.x << " " << particle.y << " " << particle.z << "\n";
+            outfile << "v " << particle.position.x << " " << particle.position.y << " " << particle.position.z << "\n";
         }
         //析构
         outfile.close();

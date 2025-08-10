@@ -240,7 +240,7 @@ namespace Solver {
                         // Z方向
                         int k_p1 = std::min(k + 1, nz - 1);
                         int k_m1 = std::max(k - 1, 0);
-                        Vector3D solid_vel_front = 0.5f * (solidVelocity(i, j, k_p1 + 1) + solidVelocity(i, j, k));
+                        Vector3D solid_vel_front = 0.5f * (solidVelocity(i, j, k_p1) + solidVelocity(i, j, k));
                         Vector3D solid_vel_back = 0.5f * (solidVelocity(i, j, k) + solidVelocity(i, j, k_m1));
                         solid_flux += solid_vel_front.z * (1.0f - w_area(i, j, k + 1));
                         solid_flux -= solid_vel_back.z * (1.0f - w_area(i, j, k));

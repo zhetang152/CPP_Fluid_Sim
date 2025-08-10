@@ -1,5 +1,5 @@
 #include "SDFUtils.h"
-#include "MACGrid.h"
+#include "GridAndParticleSystem.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Scene\Geometry\SolidShape.h"
 #include<iostream>
 

@@ -1,5 +1,5 @@
 #include"SolidBoundary.h"
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\MACgrid.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
 
 void SolidBoundary::apply(MACGrid& grid){
     const int nx = grid.getDimX();
