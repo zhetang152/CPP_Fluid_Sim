@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
-#include "D:\Computation\FluidSim\CPP_Sim\Scene\Surface\MarchingCubes.h"
+#include "Grid_Construction\GridAndParticleSystem.h"
+#include "Scene\Surface\MarchingCubes.h"
 namespace DataExporter {
     /**
      * @brief 导出网格数据到.obj文件

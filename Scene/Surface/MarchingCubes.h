@@ -1,6 +1,6 @@
 #pragma once
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\grid.h"
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\vector3D.h"
+#include "Grid_Construction\grid.h"
+#include "Grid_Construction\vector3D.h"
 #include <vector>
 
 // 用于存储最终三角网格的数据结构

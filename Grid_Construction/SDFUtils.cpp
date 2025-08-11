@@ -1,6 +1,6 @@
 #include "SDFUtils.h"
 #include "GridAndParticleSystem.h"
-#include "D:\Computation\FluidSim\CPP_Sim\Scene\Geometry\SolidShape.h"
+#include "Scene\Geometry\SolidShape.h"
 #include<iostream>
 #include<vector>
 #include<limits>

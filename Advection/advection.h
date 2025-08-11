@@ -1,7 +1,7 @@
 #pragma once
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\grid.h"
-#include "D:\Computation\FluidSim\CPP_Sim\Scene\Geometry\SolidShape.h"
+#include "Grid_Construction\GridAndParticleSystem.h"
+#include "Grid_Construction\grid.h"
+#include "Scene\Geometry\SolidShape.h"
 namespace Advector {
     /**
      * @brief 半Lagrange平流方程

@@ -1,6 +1,6 @@
 #pragma once
-#include"D:\Computation\FluidSim\CPP_Sim\Grid_Construction\grid.h"
-#include"D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
+#include "Grid_Construction/grid.h"
+#include "Grid_Construction/GridAndParticleSystem.h"
 #include <iostream>
 #include <cmath>
 namespace Solver {

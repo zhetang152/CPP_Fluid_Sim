@@ -1,5 +1,5 @@
 #pragma once
-#include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\vector3D.h"
+#include "Grid_Construction\vector3D.h"
 #include "ParticleEmitter.h"
 
 class BoxEmitter : public ParticleEmitter{
