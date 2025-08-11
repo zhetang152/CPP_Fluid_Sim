@@ -1,0 +1,12 @@
+#pragma once
+#include"D:\Computation\FluidSim\CPP_Sim\Grid_Construction\GridAndParticleSystem.h"
+class ParticleEmitter {
+public: 
+    virtual ~ParticleEmitter()=default;
+    /**
+     * @brief 每个时间步都被调用, 用于发射粒子
+     * @param grid 要将粒子发射到其中的MACGrid
+     * @param dt 时间步长
+    */
+    virtual void emit(MACGrid& grid, float dt) = 0;
+};

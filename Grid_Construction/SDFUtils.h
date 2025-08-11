@@ -10,4 +10,17 @@ class SolidShape;
  * @param supersample_level 超采样的分辨率，例如传入 2 表示 2x2x2 的采样。
  */
 
- void computeFractions(MACGrid& grid, const SolidShape& solidShape, int supersample_level = 2);
+void computeFractions(MACGrid& grid, const SolidShape& solidShape, int supersample_level = 2);
+
+/**
+ * @brief 根据粒子位置重新计算液体SDF
+ * @param grid 包含粒子和待更新m_liquid_phi的MACGrid
+ * @param particle_radius 粒子的有效半径, 用于计算距离 
+ */
+void updateLiquidSDFFromParticles(MACGrid& grid);
+
+/**
+ * @brief 根据液体SDF更新单元格类型(FLUID/AIR)
+ * @param grid 包含m_liquid_phi和待更新m_celltypes的MACGrid
+ */
+void updateCellTypesFromSDF(MACGrid& grid);

@@ -56,6 +56,8 @@ private:
     const Grid<Vector3D>& solidvelocity() const { return m_solidvelocity; }
     std::vector<Particles>& particles() { return m_particles; }
     const std::vector<Particles>& particles() const { return m_particles; }
+    Grid<float>& liquid_phi() {return m_liquid_phi;}
+    const Grid<float>& liquid_phi() const {return m_liquid_phi;}
     Grid<float>& volumeFractions() { return m_volume_fractions; }
     const Grid<float>& volumeFractions() const { return m_volume_fractions; }
     Grid<float>& area_u() { return m_area_u; }

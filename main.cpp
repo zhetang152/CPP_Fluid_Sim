@@ -96,31 +96,52 @@ int main(){
     std::unique_ptr<BoundaryCondition> boundary = std::make_unique<SolidBoundary>();
     std::vector<std::unique_ptr<ExternalForce>> forces;
     forces.emplace_back(std::make_unique<GravityForce>(Vector3D(0.0f, -9.81f, 0.0f))); //添加重力
+    
+    //创建粒子发射器
+    std::vector<std::unique_ptr<ParticleEmitter>> emitters;
+    emitters.emplace_back(std::make_unique<BoxEmitter>(
+        Vector3D(0.4,0.8,0.4),//发射区域的最小角
+        Vector3D(0.6,1.0,0.6),//发射区域的最大角
+        2000.0f,
+        Vector3D(0.0,-1.0,0.0)//初始速度向下
+    ));
     //模拟参数
     const float dt = 0.01f; //时间步长
     const float rho = 1.0f; //流体密度
     const int max_iterations = 200; //最大迭代次数
     const float tolerance = 1e-5f; //收敛容忍度
+    const float flip_alpha = 0.97f; // PIC/FLIP混合系数
+
     #define USE_FVM_SOLVER 1
+
     //2. 设置场景
-    SceneManager::createFishTank(grid, 0.8f); 
+    SceneManager::createFishTank(grid, 0.2f); 
     #if USE_FVM_SOLVER
         Sphere solid_sphere(Vector3D(0.5, 0.5, 0.5), 0.15); 
         computeFractions(grid, solid_sphere, 4); 
     #endif
     //3. 主模拟循环
-    for (int frame = 0; frame < 300; ++frame){
+    for(int frame = 0; frame < 300; ++frame){
         std::cout << "Simulating Frame" << frame << std::endl;
-        //advection
-        Advector::advect_velocity(grid,dt);
-        Advector::advect_particles(grid,solid_sphere,dt);
-        //forces
-        for (const auto& force : forces) {
+        //FLIP
+        //发射新粒子
+        for(const auto& emitter : emitters){
+            emitter->emit(grid, dt);
+        }
+        //P2G
+        FLIPSolver::ParticleToGrid(grid);
+        //创建副本,计算变化量
+        Grid<float> u_old = grid.u();
+        Grid<float> v_old = grid.v();
+        Grid<float> w_old = grid.w();
+        //在网格上进行计算
+        //  加外力
+        for(const auto& force : forces){
             force->apply(grid, dt);
         }
-        //A: 强制边界条件
+        //  强制边界条件
         boundary->apply(grid);
-        //B: 压力投影
+        //  压力投影求解
         #if USE_FVM_SOLVER
             std::cout << "Using FVM Solver..." << std::endl;
             // B1: 计算FVM散度
@@ -149,10 +170,86 @@ int main(){
         #endif
         //D: 再次强制边界条件
         boundary->apply(grid);
+        //G2P
+        FLIPSolver::GridToParticle(grid, u_old, v_old, w_old, flip_alpha);
+        //平流粒子
+        Advector::advect_particles(grid, solid_sphere, dt);
+        //7.粒子管理
+        const int min_particles_per_cell = 3;
+        const int max_particles_per_cell = 12;
+        // 创建一个网格来统计每个单元格的粒子数
+        Grid<int> particle_counts(grid.getDimX(), grid.getDimY(), grid.getDimZ(), 0);
+        for (const auto& p : grid.particles()) {
+            int i = static_cast<int>(p.position.x / grid.getDx());
+            int j = static_cast<int>(p.position.y / grid.getDx());
+            int k = static_cast<int>(p.position.z / grid.getDx());
+            // 安全边界检查
+            if (i >= 0 && i < grid.getDimX() && j >= 0 && j < grid.getDimY() && k >= 0 && k < grid.getDimZ()) {
+                particle_counts(i, j, k)++;
+            }
+        }
+        //删除拥堵区域的多余粒子
+        auto& particles = grid.particles();
+        particles.erase(std::remove_if(particles.begin(), particles.end(), 
+            [&](const Particles& p) {
+                int i = static_cast<int>(p.position.x / grid.getDx());
+                int j = static_cast<int>(p.position.y / grid.getDx());
+                int k = static_cast<int>(p.position.z / grid.getDx());
+
+                if (i < 0 || i >= grid.getDimX() || j < 0 || j >= grid.getDimY() || k < 0 || k >= grid.getDimZ()) {
+                    return true; // 删除跑到边界外的粒子
+                }
+
+                // 只在流体单元格中考虑删除
+                if (grid.celltypes()(i, j, k) == CellType::FLUID && particle_counts(i, j, k) > max_particles_per_cell) {
+                    // 随机删除一些，让期望数量降到max附近
+                    // 删除概率 = (当前数量 - 目标数量) / 当前数量
+                    float removal_probability = static_cast<float>(particle_counts(i, j, k) - max_particles_per_cell) / particle_counts(i, j, k);
+                    if (static_cast<float>(rand()) / RAND_MAX < removal_probability) {
+                        particle_counts(i, j, k)--; // 预减计数器，防止过度删除
+                        return true; // 返回true表示“删除这个粒子”
+                    }
+                }
+                return false;
+            }), particles.end());
+
+        //在稀疏区域补充新粒子 (重播种)
+        std::vector<Particles> new_particles;
+        for (int k = 0; k < grid.getDimZ(); ++k) {
+            for (int j = 0; j < grid.getDimY(); ++j) {
+                for (int i = 0; i < grid.getDimX(); ++i) {
+                    // 只在流体单元格中考虑补充
+                    if (grid.celltypes()(i, j, k) == CellType::FLUID && particle_counts(i, j, k) < min_particles_per_cell) {
+                        int num_to_add = min_particles_per_cell - particle_counts(i, j, k);
+                        for (int n = 0; n < num_to_add; ++n) {
+                            // 使用抖动随机创建新粒子
+                            float jitter_x = (static_cast<float>(rand()) / RAND_MAX);
+                            float jitter_y = (static_cast<float>(rand()) / RAND_MAX);
+                            float jitter_z = (static_cast<float>(rand()) / RAND_MAX);
+                            
+                            Vector3D pos = Vector3D((i + jitter_x) * grid.getDx(), (j + jitter_y) * grid.getDx(), (k + jitter_z) * grid.getDx());
+
+                            // 创建新粒子并从网格插值速度
+                            Particles new_p;
+                            new_p.position = pos;
+                            new_p.velocity = Advector::get_velocity_at(grid, pos); // 从当前网格速度插值
+                            new_particles.push_back(new_p);
+                        }
+                    }
+                }
+            }
+        }
+        // 将所有新创建的粒子一次性加入主列表
+        particles.insert(particles.end(), new_particles.begin(), new_particles.end());
+        //4. 从SDF生成用于渲染的三角网格
+        TriangleMesh render_mesh = MarchingCubes::extractSurface(grid.liquid_phi(), grid.getDx());
+        //end
         //输出可视化文件
         std::stringstream ss;
         ss << "D:\\Computation\\FluidSim_result\\frame_" << std::setw(4) << std::setfill('0') << frame << ".obj";
-        DataExporter::exportToObj(grid, ss.str());
+        //若要看粒子: DataExporter::exportToObj(grid, ss.str());
+        //查看表面
+        DataExporter::exportMeshToObj(render_mesh, ss.str());
     }
     std::cout << "Simulation completed." << std::endl;
     return 0;

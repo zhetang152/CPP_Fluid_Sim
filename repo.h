@@ -15,3 +15,6 @@
 #include "D:\Computation\FluidSim\CPP_Sim\IO\DataExporter.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Grid_Construction\SDFUtils.h"
 #include "D:\Computation\FluidSim\CPP_Sim\Scene\Geometry\Sphere.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Advection\FLIP.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Scene\Emitters\BoxEmitter.h"
+#include "D:\Computation\FluidSim\CPP_Sim\Scene\Surface\MarchingCubes.h"

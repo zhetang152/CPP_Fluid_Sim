@@ -10,14 +10,21 @@ include_directories(${CMAKE_SOURCE_DIR})
 # 源文件列表
 set(SOURCES
     main.cpp
+
     Grid_Construction/vector3D.cpp
     Grid_Construction/SDFUtils.cpp
+
     Boundary/SolidBoundary.cpp
+
     Scene/SceneManager.cpp
+    Scene/Emitters/BoxEmitter.cpp
     Solver/solver.cpp
+
     Advection/advection.cpp
     Advection/FLIP.cpp
+
     IO/DataExporter.cpp
+    
     Force/General_Force/GravityForce.cpp
 )
 # 生成可执行文件
