@@ -18,6 +18,7 @@ set(SOURCES
 
     Scene/SceneManager.cpp
     Scene/Emitters/BoxEmitter.cpp
+    Scene/Surface/ply.c
     Scene/Surface/MarchingCubes.cpp
 
     Solver/solver.cpp
