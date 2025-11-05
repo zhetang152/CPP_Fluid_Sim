@@ -1,18 +1,21 @@
-#pragma once
+#ifndef VECMATH_H
+#define VECMATH_H
 
 #include <cmath>
 #include <stdexcept>
+#include <array>
+#include <limits>
 
 #include "math.h"
-#include "pbrt.h"
+
 //类型萃取
 template<typename T>
 struct TLength{
     using type = Float;
 };
 template<>
-struct TLength<double>{
-    using type = double;
+struct TLength<Float>{
+    using type = Float;
 };
 template<>
 struct TLength<long double>{
@@ -195,6 +198,7 @@ public:
 
 using Vector3f = Vector3<Float>;
 using Vector3i = Vector3<int>;
+using Vector3d = Vector3<float>;  // 为了兼容旧的 Vector3D (float)
 
 template<typename T>
 class Point3: public Tuple3<Point3, T>{
@@ -206,9 +210,7 @@ public:
     Point3() = default;
     Point3(T x_val, T y_val, T z_val): Tuple3<Point3, T>(x_val, y_val, z_val) {}
     template<typename U>
-    explicit Point3(Point3<U> other): Tuple3<Point3, T>(T(other.x), T(other.y), T(other.z)) {}
-    template<typename U>
-    explicit Point3(Point3<U> other): Tuple3<Vector3, T>(T(other.x), T(other.y), T(other.z)) {}
+    explicit Point3(Point3<U> other): Tuple3<Point3, T>(T(other.x), T(other.y), T(other.z)) {}s
 
     using Tuple3<Point3, T>::operator*;
     using Tuple3<Point3, T>::operator*=;
@@ -231,7 +233,7 @@ public:
         return {x - v.x, y - v.y, z - v.z};
     }
     template<typename U>
-    auto operator-(Point3<U> p) -> Vector3<decltype(T{} - U{})>{
+    auto operator-(Point3<U> p) const -> Vector3<decltype(T{} - U{})>{
         return {x - p.x, y - p.y, z - p.z};
     }
     template<typename U>
@@ -318,7 +320,7 @@ inline void CoordinateSystem(const Vector3<T> v1, const Vector3<T> *v2, const Ve
 //Operations on Point3
 template<typename T>
 inline auto DistanceSquared(const Point3<T> p1, const Point3<T> p2){
-    return LengthSquared(p1 - p2)
+    return LengthSquared(p1 - p2);
 }
 template<typename T>
 inline auto Distance(const Point3<T> p1, const Point3<T> p2){
@@ -384,185 +386,9 @@ inline Vector3<T> FaceForward(Vector3<T> v, Normal3<T> n2) {
     return (Dot(v, n2) < 0.f) ? -v : v;
 }
 
-template<typename T>
-class Bounds3 {
-public:
-    Point3<T> pMin, pMax;
-
-    Bounds3() {
-        T minNum = std::numeric_limits<T>::lowest();
-        T maxNum = std::numeric_limits<T>::max();
-        pMin = Point3<T>(maxNum, maxNum, maxNum);
-        pMax = Point3<T>(minNum, minNum, minNum);
-    }
-
-    explicit Bounds3(const Point3<T>& p) : pMin(p), pMax(p) {}
-
-    Bounds3(const Point3<T>& p1, const Point3<T>& p2)
-        : pMin{Min(p1, p2)}, pMax{Max(p1, p2)} {}
-
-    Point3<T> operator[](int i) const {
-        if (i == 0) return pMin;
-        if (i == 1) return pMax;
-        throw std::out_of_range("index out of range.");
-    }
-    Point3<T> &operator[](int i) {
-        if (i == 0) return pMin;
-        if (i == 1) return pMax;
-        throw std::out_of_range("index out of range.");
-    }
-
-    //坐标与点辅助函数
-    Point3<T> Corner(int corner) const {
-        if(corner == 0) return Point3<T>(pMin.x, pMin.y, pMin.z);
-        else if(corner == 1) return Point3<T>(pMax.x, pMin.y, pMin.z);
-        else if(corner == 2) return Point3<T>(pMin.x, pMax.y, pMin.z);
-        else if(corner == 3) return Point3<T>(pMin.x, pMin.y, pMax.z);
-        else if(corner == 4) return Point3<T>(pMin.x, pMax.y, pMax.z);
-        else if(corner == 5) return Point3<T>(pMax.x, pMin.y, pMax.z);
-        else if(corner == 6) return Point3<T>(pMax.x, pMax.y, pMin.z);
-        else return Point3<T>(pMax.x, pMax.y, pMax.z);
-    }
-    Point3f Lerp(Point3f t) cosnt {
-        return Point3f(Lerp(t.x, pMin.x, pMax.x),
-                       Lerp(t.y, pMin.y, pMax.y),
-                       Lerp(t.z, pMin.z, pMax.z));
-    }
-    Vector3f Offset(Point3f p) const {
-        Vector3f o = p - pMin;
-        if(pMax.x > pMin.x)
-            o.x /= pMax.x - pMin.x;
-        if(pMax.y > pMin.y)
-            o.y /= pMax.y - pMin.y;
-        if(pMax.z > pMin.z)
-            o.z /= pMax.z - pMin.z;
-        return o;
-    }
-
-    //几何性质辅助函数
-    Vector3<T> Diagonal() const {
-        return pMax - pMin;
-    }
-
-    T surfaceArea() const {
-        Vector3<T> d = Diagonal();
-        return 2 * (d.x * d.y + d.x * d.z + d.y * d.z);
-    }
-
-    T Volume() const {
-        Vector3<T> d = Diagonal();
-        return d.x * d.y * d.z;
-    }
-
-    int MaxLengthAxis() const {
-        Vector3<T> d = Diagonal();
-        if (d.x > d.y && d.x > d.z)
-            return 0;
-        else if (d.y > d.z)
-            return 1;
-        else
-            return 2;
-    }
-
-    void BoundingSphere(Point3<T> *center, T *radius) const {
-        *center = (pMin + pMax) / 2;
-        *radius = Inside(*center, *this) ? Distance(*center, pMax) : 0;
-    }
-
-    bool isEmpty() const {
-        return pMin.x >= pMax.x || pMin.y >= pMax.y || pMin.z >= pMax.z;
-    }
-
-    bool isDegenerate() const {
-        return pMin.x > pMax.x || pMin.y > pMax.y || pMin.z > pMax.z;
-    }
-
-    template<typename U>
-    explicit Bounds3(const Bounds3<U>& b) {
-        if(b.isEmpty()){
-            *this = Bounds3<T>();
-        }
-        else{
-            pMin = Point3<T>(b.pMin);
-            pMax = Point3<T>(b.pMax);
-        }
-    }
-
-    bool operator==(const Bounds3<T>& b) cosnt {
-        return b.pMin == pMin && b.pMax == pMax;
-    }
-    bool operator!=(const Bounds3<T> &b) const {
-        return b.pMin != pMin || b.pMax != pMax;
-    }
-    //射线相交测试
-    bool IntersectP(Point3f o, Vector3f d, Float tMax = Infinity, Float *hitt0 = nullptr,
-                    Float *hitt1 = nullptr) const;
-                    
-    bool IntersectP(Point3f o, Vector3f d, Float tMax, Vector3f invDir,
-                    const int dirIsNeg[3]) const;
-};
-
-template<typename T>
-inline Bounds3<T> Union(const Bounds3<T>& b1, const Bounds3<T>& b2) {
-    Bounds3<T> result;
-    result.pMin = Min(b1.pMin, b2.pMin);
-    result.pMax = Max(b1.pMax, b2.pMax);
-    return result;
-}
-template <typename T>
-inline Bounds3<T> Intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
-    Bounds3<T> result;
-    result.pMin = Max(b1.pMin, b2.pMin);
-    result.pMax = Min(b1.pMax, b2.pMax);
-    return result;
-}
-template <typename T>
-inline bool Overlaps(const Bounds3<T> &b1, const Bounds3<T> &b2) {
-    bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
-    bool y = (b1.pMax.y >= b2.pMin.y) && (b1.pMin.y <= b2.pMax.y);
-    bool z = (b1.pMax.z >= b2.pMin.z) && (b1.pMin.z <= b2.pMax.z);
-    return (x && y && z);
-}
-
-template <typename T>
-inline bool Inside(Point3<T> p, const Bounds3<T> &b) {
-    return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y && p.y <= b.pMax.y &&
-            p.z >= b.pMin.z && p.z <= b.pMax.z);
-}
-
-template <typename T>
-//Inside()的InsideExclusive()变体不认为位于上边界的点在包围盒内部
-//它主要用于整数类型的包围盒
-inline bool InsideExclusive(Point3<T> p, const Bounds3<T> &b) {
-    return (p.x >= b.pMin.x && p.x < b.pMax.x && p.y >= b.pMin.y && p.y < b.pMax.y &&
-            p.z >= b.pMin.z && p.z < b.pMax.z);
-}
-template <typename T, typename U>
-inline auto DistanceSquared(Point3<T> p, const Bounds3<U> &b) {
-    using TDist = decltype(T{} - U{});
-    TDist dx = std::max<TDist>({0, b.pMin.x - p.x, p.x - b.pMax.x});
-    TDist dy = std::max<TDist>({0, b.pMin.y - p.y, p.y - b.pMax.y});
-    TDist dz = std::max<TDist>({0, b.pMin.z - p.z, p.z - b.pMax.z});
-    return Sqr(dx) + Sqr(dy) + Sqr(dz);
-}
-template <typename T, typename U>
-inline auto Distance(Point3<T> p, const Bounds3<U> &b) {
-    auto dist2 = DistanceSquared(p, b);
-    using TDist = typename TupleLength<decltype(dist2)>::type;
-    return std::sqrt(TDist(dist2));
-}
-
-template <typename T, typename U>
-inline Bounds3<T> Expand(const Bounds3<T> &b, U delta) {
-    Bounds3<T> ret;
-    ret.pMin = b.pMin - Vector3<T>(delta, delta, delta);
-    ret.pMax = b.pMax + Vector3<T>(delta, delta, delta);
-    return ret;
-}
-
-
-
 //记号
 using Vector3f = Vector3<Float>;
 using Point3f = Point3<Float>;
 using Normal3f = Normal3<Float>;
+
+#endif // VECMATH_H

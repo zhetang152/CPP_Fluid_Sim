@@ -11,7 +11,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(SOURCES
     main.cpp
 
-    Grid_Construction/vector3D.cpp
     Grid_Construction/SDFUtils.cpp
 
     Boundary/SolidBoundary.cpp

@@ -6,7 +6,7 @@
 #include<ctime>//用于time()
 #include<iomanip>//格式化
 #include<sstream>
-#include "Grid_Construction\GridAndParticleSystem.hpp"
+#include "Grid_Construction\GridAndParticleSystem.h"
 #include "Scene\SceneManager.hpp"
 #include "Boundary\SolidBoundary.hpp"
 #include "Solver\solver.hpp"
