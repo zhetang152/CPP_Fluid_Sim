@@ -9,7 +9,7 @@ namespace SceneManager {
         const int nz = grid.getDimZ();
         Grid<CellType>& cellTypes = grid.celltypes();
         //获取固体速度
-        Grid<Vector3D>& solidVelocity = grid.solidvelocity();
+        Grid<Vector3f>& solidVelocity = grid.solidvelocity();
         //遍历所有网格
         for (int k = 0; k < nz; ++k) {
             for (int j = 0; j < ny; ++j) {
@@ -19,7 +19,7 @@ namespace SceneManager {
                         //设置为固体单元格
                         grid.celltypes()(i, j, k) = CellType::SOLID;
                         //设置固体速度为零
-                        solidVelocity(i, j, k) = Vector3D(0.0f, 0.0f, 0.0f);
+                        solidVelocity(i, j, k) = Vector3f(0.0f, 0.0f, 0.0f);
                     } else {
                         int fluidHeight = static_cast<int>(ny* fluidLevel);
                         if(j < fluidHeight){
@@ -30,10 +30,10 @@ namespace SceneManager {
                                 float jitter_y = (static_cast<float>(rand()) / RAND_MAX - 0.5f);
                                 float jitter_z = (static_cast<float>(rand()) / RAND_MAX - 0.5f);
                                 // 计算粒子位置，并添加到grid的粒子列表中
-                                Vector3D pos = grid.PositionOfPressure(i, j, k) + Vector3D(jitter_x, jitter_y, jitter_z) * grid.getDx();
+                                Point3f pos = grid.PositionOfPressure(i, j, k) + Vector3f(jitter_x, jitter_y, jitter_z) * grid.getDx();
                                 Particles new_particle;
                                 new_particle.position = pos;
-                                new_particle.velocity = Vector3D(0.0f, 0.0f, 0.0f);
+                                new_particle.velocity = Vector3f(0.0f, 0.0f, 0.0f);
                                 grid.particles().push_back(new_particle);
                             }
                         }else{

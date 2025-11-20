@@ -1,5 +1,5 @@
 #pragma once
-#include "Grid_Construction\GridAndParticleSystem.hpp"
+#include "Grid_Construction\GridAndParticleSystem.h"
 
 namespace SceneManager {
     /**

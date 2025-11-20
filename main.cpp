@@ -12,7 +12,7 @@
 #include "Solver\solver.hpp"
 #include "Advection\advection.hpp"
 #include "Force\General_Force\GravityForce.hpp"
-#include "IO\DataExporter.hpp"
+#include "IO\DataExporter.h"
 #include "Grid_Construction\SDFUtils.hpp"
 #include "Scene\Geometry\Sphere.hpp"
 #include "Advection\FLIP.hpp"

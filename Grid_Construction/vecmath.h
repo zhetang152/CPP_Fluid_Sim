@@ -58,9 +58,15 @@ public:
         z += other.z;
         return static_cast<Child<T>&>(*this);
     }
+    
 
     template<typename U>
     auto operator-(Child<U>& c) const -> Child<decltype(T{} - U{})>{
+        return {x - c.x, y - c.y, z - c.z};
+    }
+
+    template<typename U>
+    auto operator-(const Child<U>& c) const -> Child<decltype(T{} - U{})>{
         return {x - c.x, y - c.y, z - c.z};
     }
 
@@ -74,6 +80,11 @@ public:
 
     template<typename U>
     auto operator*(U s) const -> Child<decltype(T{} * U{})>{
+        return {x * s, y * s, z * s};
+    }
+
+    template<typename U>
+    auto operator*(const U s) const -> Child<decltype(T{} * U{})>{
         return {x * s, y * s, z * s};
     }
 
@@ -107,6 +118,10 @@ public:
 //general algebraic operations
 template<template<typename> class Child, typename T, typename U>
 inline auto operator*(U s, Tuple3<Child, T>& t) -> Child<decltype(T{} * U{})>{
+    return t * s;
+}
+template<template<typename> class Child, typename T, typename U>
+inline auto operator*(U s, const Tuple3<Child, T>& t) -> Child<decltype(T{} * U{})>{
     return t * s;
 }
 template<template<typename> class Child, typename T>
@@ -198,7 +213,6 @@ public:
 
 using Vector3f = Vector3<Float>;
 using Vector3i = Vector3<int>;
-using Vector3d = Vector3<float>;  // 为了兼容旧的 Vector3D (float)
 
 template<typename T>
 class Point3: public Tuple3<Point3, T>{
