@@ -1,4 +1,4 @@
-# 利用CPP构建流体模拟求解器(持续更新)
+# 利用CPP构建流体模拟求解器(升级未完成)
 
 ## 关于项目
 
@@ -9,7 +9,7 @@
 
 * **Grid_Construction**
 
-    * 构建了向量数据类型 `Vector3D.h`以及网格数据类型 `grid.h`
+    * 构建了向量数据类型 `vecmath.h`以及网格数据类型 `grid.h`
 
     * 进一步构建了交错网格(MACGrid)用于存储流体的速度与压力数据. 
 * **Advection**
@@ -59,71 +59,6 @@
 
 * Golub, G. H., & Van Loan, C. F. (2013). Matrix computations (4th ed.). Johns Hopkins University Press.
 
-### 模拟流程
-```mermaid
-graph TD
-    %% 定义样式
-    style A fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    style B fill:#e6ffe6,stroke:#009900,stroke-width:2px
-    style C fill:#fff0e6,stroke:#ff6600,stroke-width:2px
-    style D fill:#f2e6ff,stroke:#9933ff,stroke-width:2px
-
-    subgraph A["🏗️ A. 核心数据与构建"]
-        Grid_Construction("
-            <b>Grid_Construction</b><br/>
-            定义模拟世界的基础<br/><hr>
-            - <b>MACGrid</b>: 存储速度与压力的交错网格<br/>
-            - <b>Particles</b>: 流体的核心载体 (FLIP)<br/>
-            - <b>SDFUtils</b>: 用于精确处理曲面边界
-        ")
-    end
-
-    subgraph B["🌍 B. 场景与物理设定"]
-        Scene("
-            <b>Scene</b><br/>
-            一次性搭建模拟初始状态<br/><hr>
-            - <b>SceneManager</b>: 创建鱼缸、水坝等场景<br/>
-            - <b>Emitters</b>: 持续向场景中发射粒子<br/>
-            - <b>SolidShape</b>: 定义球体等几何边界
-        ")
-        Force("
-            <b>Force & Boundary</b><br/>
-            在每帧中强制执行的物理法则<br/><hr>
-            - <b>GravityForce</b>: 施加重力<br/>
-            - <b>SolidBoundary</b>: 处理与固体墙壁的碰撞
-        ")
-    end
-
-    subgraph C["⚙️ C. 核心模拟循环"]
-        Advection("
-            <b>Advection</b><br/>
-            物质输运，负责“推动”一切<br/><hr>
-            - <b>FLIP/PIC混合法</b>: 结合粒子与网格优势，更新粒子速度与位置<br/>
-            - <b>P2G / G2P</b>: 粒子与网格间数据传递的核心步骤
-        ")
-        Solver("
-            <b>Solver</b><br/>
-            解算压力，维持流体不可压缩性<br/><hr>
-            - <b>压力泊松方程</b>: 求解该方程以获得压力场<br/>
-            - <b>MICCG(0) 求解器</b>: 高效求解大型稀疏线性系统的关键算法
-        ")
-    end
-
-    subgraph D["📊 D. 输出与可视化"]
-        Surface("
-            <b>Surface</b><br/>
-            从离散数据重建光滑表面<br/><hr>
-            - <b>重建流体SDF</b>: 从粒子位置生成水平集<br/>
-            - <b>Marching Cubes</b>: 从SDF提取三角网格的关键算法
-        ")
-        IO("
-            <b>IO</b><br/>
-            将结果保存为文件<br/><hr>
-            - <b>exportMeshToObj</b>: 导出为标准的 .obj 3D模型文件
-        ")
-    end
-
-    %% 流程连接
     A -- "提供数据结构" --> B
     B -- "一次性初始化" --> C
     C -- "<b>核心循环(每一帧)</b>" --> C
