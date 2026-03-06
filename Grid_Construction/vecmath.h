@@ -8,6 +8,13 @@
 
 #include "math.h"
 
+//前向声明
+template <typename T> class Vector3;
+template <typename T> class Point3;
+template <typename T> class Normal3;
+
+
+
 //类型萃取
 template<typename T>
 struct TLength{
@@ -80,11 +87,6 @@ public:
 
     template<typename U>
     auto operator*(U s) const -> Child<decltype(T{} * U{})>{
-        return {x * s, y * s, z * s};
-    }
-
-    template<typename U>
-    auto operator*(const U s) const -> Child<decltype(T{} * U{})>{
         return {x * s, y * s, z * s};
     }
 
@@ -206,9 +208,11 @@ public:
     template<typename U>
     explicit Vector3(Vector3<U> other): Tuple3<Vector3, T>(T(other.x), T(other.y), T(other.z)) {}
     template<typename U>
-    explicit Vector3(Point3<U> p) {}
+    explicit Vector3(Point3<U> p):Tuple3<Vector3, T>(T(p.x), T(p.y), T(p.z)){}
     template<typename U>
-    explicit Vector3(Normal3<U> n) {}
+    explicit Vector3(Normal3<U> n):Tuple3<Vector3, T>(T(n.x), T(n.y), T(n.z)){}
+    template<typename U>
+    explicit Vector3(const Point3<U>& p) : Tuple3<Vector3, T>(T(p.x), T(p.y), T(p.z)) {}
 };
 
 using Vector3f = Vector3<Float>;
@@ -224,7 +228,7 @@ public:
     Point3() = default;
     Point3(T x_val, T y_val, T z_val): Tuple3<Point3, T>(x_val, y_val, z_val) {}
     template<typename U>
-    explicit Point3(Point3<U> other): Tuple3<Point3, T>(T(other.x), T(other.y), T(other.z)) {}s
+    explicit Point3(Point3<U> other): Tuple3<Point3, T>(T(other.x), T(other.y), T(other.z)) {}
 
     using Tuple3<Point3, T>::operator*;
     using Tuple3<Point3, T>::operator*=;
@@ -243,6 +247,15 @@ public:
         return *this;
     }
     template<typename U>
+    auto operator+(Normal3<U> n) const -> Point3<decltype(T{} + U{})> {
+        return {x + n.x, y + n.y, z + n.z};
+    }
+    template<typename U>
+    Point3<T>& operator+=(Normal3<U> n) {
+        x += n.x; y += n.y; z += n.z;
+        return *this;
+    }
+    template<typename U>
     auto operator-(Vector3<U> v) -> Point3<decltype(T{} - U{})>{
         return {x - v.x, y - v.y, z - v.z};
     }
@@ -257,6 +270,8 @@ public:
         z -= v.z;
         return *this;
     }
+    template<typename U>
+    explicit Point3(const Vector3<U>& v) : Tuple3<Point3, T>(T(v.x), T(v.y), T(v.z)) {}
 };
 template <typename T>
 class Normal3 : public Tuple3<Normal3, T> {
@@ -330,6 +345,7 @@ inline void CoordinateSystem(const Vector3<T> v1, const Vector3<T> *v2, const Ve
     *v2 = Vector3f(1 + sign * Sqr(v1.x) * a, sign * b, -sign * v1.x);
     *v3 = Vector3f(b, sign + Sqr(v1.y) * a, -v1.y);
 }
+
 
 //Operations on Point3
 template<typename T>

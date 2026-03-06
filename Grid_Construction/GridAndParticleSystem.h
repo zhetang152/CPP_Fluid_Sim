@@ -1,4 +1,4 @@
-
+#pragma once
 #include"vecmath.h"
 #include"grid.h"
 
@@ -66,8 +66,6 @@ private:
     const Grid<Float>& area_v() const { return m_area_v; }
     Grid<Float>& area_w() { return m_area_w; }
     const Grid<Float>& area_w() const { return m_area_w; }
-    Grid<Float>& u() { return m_u; }
-    const Grid<Float>& u() const { return m_u; }
     Grid<Float>& u() { return m_u; }
     const Grid<Float>& u() const { return m_u; }
     Grid<Float>& v() { return m_v; }

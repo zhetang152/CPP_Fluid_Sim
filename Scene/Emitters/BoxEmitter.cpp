@@ -1,4 +1,4 @@
-#include "BoxEmitter.hpp"
+#include "BoxEmitter.h"
 #include <cstdlib>//rand()
 #include <vector>
 
@@ -17,9 +17,9 @@ void BoxEmitter::emit(MACGrid& grid, float dt){
         float rand_x = static_cast<float>(rand()) / RAND_MAX;
         float rand_y = static_cast<float>(rand()) / RAND_MAX;
         float rand_z = static_cast<float>(rand()) / RAND_MAX;
-        Vector3D particle_pos = m_min_corner + Vector3D(rand_x * (m_max_corner.x - m_min_corner.x),
-                                                        rand_y * (m_max_corner.y - m_min_corner.y),
-                                                        rand_z * (m_max_corner.z - m_min_corner.z));
+        Point3f particle_pos = m_min_corner + Vector3f(rand_x * (m_max_corner.x - m_min_corner.x),
+                                                      rand_y * (m_max_corner.y - m_min_corner.y),
+                                                      rand_z * (m_max_corner.z - m_min_corner.z));
         //创建一个新粒子
         Particles new_particle;
         new_particle.position = particle_pos;

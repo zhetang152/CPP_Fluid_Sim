@@ -1,5 +1,5 @@
 #include"SolidBoundary.hpp"
-#include "Grid_Construction\GridAndParticleSystem.hpp"
+#include "Grid_Construction\GridAndParticleSystem.h"
 
 void SolidBoundary::apply(MACGrid& grid){
     const int nx = grid.getDimX();
@@ -7,7 +7,7 @@ void SolidBoundary::apply(MACGrid& grid){
     const int nz = grid.getDimZ();
     //获取内部数据网格的引用
     Grid<CellType>& celltypes = grid.celltypes();
-    Grid<Vector3D>& solidvelocity = grid.solidvelocity();
+    Grid<Vector3f>& solidvelocity = grid.solidvelocity();
     Grid<float>& u = grid.u();
     Grid<float>& v = grid.v();
     Grid<float>& w = grid.w();

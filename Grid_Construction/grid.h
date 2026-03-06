@@ -49,6 +49,15 @@ public:
     int getWidth() const noexcept { return m_width; }
     int getHeight() const noexcept { return m_height; }
     int getDepth() const noexcept { return m_depth; }
+
+    Grid<T> operator-(const Grid<T>& other) const {
+        assert(m_width == other.m_width && m_height == other.m_height && m_depth == other.m_depth);
+        Grid<T> result(m_width, m_height, m_depth);
+        for (sizeType i = 0; i < m_data.size(); ++i) {
+            result.m_data[i] = m_data[i] - other.m_data[i];
+        }
+        return result;
+    }
     
 };
 #endif // GRID_H

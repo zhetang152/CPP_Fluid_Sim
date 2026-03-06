@@ -1,5 +1,5 @@
-#include "FLIP.hpp"
-#include "advection.hpp"
+#include "FLIP.h"
+#include "advection.h"
 namespace FLIPSolver {
     void FLIPSolver::ParticleToGrid(MACGrid& grid){
         //1. 获取u, v, w的网格引用, 并初始化为0
@@ -17,7 +17,7 @@ namespace FLIPSolver {
         //2. 遍历所有粒子
         for (const auto& particle : grid.particles()) {
             //获取粒子位置u方向
-            const Vector3D& u_pos = particle.position / dx;
+            const Point3f& u_pos = particle.position / dx;
             //计算粒子在网格中的索引
             int ui = static_cast<int>(u_pos.x);
             int uj = static_cast<int>(u_pos.y-0.5f);
@@ -35,14 +35,14 @@ namespace FLIPSolver {
                         float weight = w_x * w_y * w_z;
                         //安全检查
                         if(i_>= 0 && i_ <u.getWidth() && j_>= 0 && j_ < u.getHeight() && k_ >= 0 && k_ < u.getDepth()){
-                            u(i_, j_, k_) += particle.velocity.x + weight;
+                            u(i_, j_, k_) += particle.velocity.x * weight;
                             u_weight(i_, j_, k_) += weight;
                         }
                     }
                 }
             }
                 // --- 对V速度分量进行贡献 ---
-            Vector3D v_pos = particle.position / dx;
+            Point3f v_pos = particle.position / dx;
             int vi = static_cast<int>(v_pos.x - 0.5f);
             int vj = static_cast<int>(v_pos.y);
             int vk = static_cast<int>(v_pos.z - 0.5f);
@@ -68,7 +68,7 @@ namespace FLIPSolver {
             }
         
             // --- 对W速度分量进行贡献 ---
-            Vector3D w_pos = particle.position / dx;
+            Point3f w_pos = particle.position / dx;
             int wi = static_cast<int>(w_pos.x - 0.5f);
             int wj = static_cast<int>(w_pos.y - 0.5f);
             int wk = static_cast<int>(w_pos.z);
@@ -105,48 +105,22 @@ namespace FLIPSolver {
         }
     }
     void GridToParticle(MACGrid& grid, const Grid<float>& u_old, const Grid<float>& v_old, const Grid<float>& w_old, float alpha=0.95f){
-        //1. 计算速度变化量网络
-        Grid<float> delta_u = grid.u();
-        Grid<float> delta_v = grid.v();
-        Grid<float> delta_w = grid.w();
-        for(int k = 0; k < delta_u.getDepth(); ++k){
-            for(int j = 0; j < delta_u.getHeight(); ++j){
-                for(int i = 0; i < delta_u.getWidth(); ++i){
-                    delta_u(i,j,k) -= u_old(i,j,k);
-                }
-            }
-        }
-        for(int k = 0; k < delta_v.getDepth(); ++k){
-            for(int j = 0; j < delta_v.getHeight(); ++j){
-                for(int i = 0; i < delta_v.getWidth(); ++i){
-                    delta_v(i,j,k) -= v_old(i,j,k);
-                }
-            }
-        }
-        for(int k = 0; k < delta_w.getDepth(); ++k){
-            for(int j = 0; j < delta_w.getHeight(); ++j){
-                for(int i = 0; i < delta_w.getWidth(); ++i){
-                    delta_w(i,j,k) -= w_old(i,j,k);
-                }
-            }
-        }
-        //2. 遍历所有粒子, 并应用混合公式
+        const float dx = grid.getDx();
+        // 1. 预先计算速度变化量网格 (只计算一次，不放在粒子循环里)
+        Grid<float> delta_u = grid.u() - u_old;
+        Grid<float> delta_v = grid.v() - v_old;
+        Grid<float> delta_w = grid.w() - w_old;
+
+        // 2. 遍历粒子应用混合公式
         for (auto& p : grid.particles()){
-            //PIC
-            Vector3D vel_PIC = Advector::get_velocity_at(grid, p.position);
-            //FLIP
-            //获取粒子旧速度
-            Vector3D vel_old_particle = p.velocity;
-            //从delta网格中插值得到速度变化量
-            MACGrid delta_grid(grid.getDimX(), grid.getDimY(), grid.getDimZ(),grid.getDx());
-            delta_grid.u() = delta_u;
-            delta_grid.v() = delta_v;
-            delta_grid.w() = delta_w;
-            Vector3D delta_vel_interp = Advector::get_velocity_at(delta_grid, p.position);
-            //计算FLIP速度
-            Vector3D vel_FLIP = vel_old_particle + delta_vel_interp;
-            //应用混合公式
+            // PIC 部分：直接从当前网格插值
+            Vector3f vel_PIC = Advector::get_velocity_at(grid, p.position);
+
+            // FLIP 部分：使用新重载函数，直接传入 delta 网格，没有任何内存分配
+            Vector3f delta_vel_interp = Advector::get_velocity_at(delta_u, delta_v, delta_w, dx, p.position);
+            Vector3f vel_FLIP = p.velocity + delta_vel_interp;
+
+            // 应用混合公式
             p.velocity = vel_PIC * alpha + vel_FLIP * (1.0f - alpha);
         }
     }
-}
