@@ -59,8 +59,3 @@
 
 * Golub, G. H., & Van Loan, C. F. (2013). Matrix computations (4th ed.). Johns Hopkins University Press.
 
-    A -- "提供数据结构" --> B
-    B -- "一次性初始化" --> C
-    C -- "<b>核心循环(每一帧)</b>" --> C
-    C -- "帧结束，输出结果" --> D
-```
