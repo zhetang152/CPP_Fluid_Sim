@@ -1,5 +1,5 @@
 #pragma once
-#include"BoundaryCondition.hpp"
+#include"BoundaryCondition.h"
 /**
  * @class SolidBoundary
  * @brief 处理固体墙壁的速度边界条件

@@ -1,4 +1,4 @@
-#include"SolidBoundary.hpp"
+#include"SolidBoundary.h"
 #include "Grid_Construction\GridAndParticleSystem.h"
 
 void SolidBoundary::apply(MACGrid& grid){

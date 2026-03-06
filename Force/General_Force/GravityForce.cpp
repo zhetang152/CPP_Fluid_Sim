@@ -1,6 +1,6 @@
-#include "GravityForce.hpp"
+#include "Force\General_Force\GravityForce.h"
 
-GravityForce::GravityForce(const Vector3D& gravity): m_gravity(gravity) {}
+GravityForce::GravityForce(const Vector3f& gravity): m_gravity(gravity) {}
 void GravityForce::apply(MACGrid& grid, float dt) {
     for (int k = 0; k < grid.getDimZ(); ++k) {
         for (int j = 0; j< grid.getDimY(); ++j) {

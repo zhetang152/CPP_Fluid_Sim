@@ -1,4 +1,4 @@
-#include "SceneManager.hpp"
+#include "SceneManager.h"
 #include<iostream>
 
 namespace SceneManager {
