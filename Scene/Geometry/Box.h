@@ -1,5 +1,4 @@
 #pragma once
-
 #include "SolidShape.h"
 #include <algorithm>
 #include <cmath>
