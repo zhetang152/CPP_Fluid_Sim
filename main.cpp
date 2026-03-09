@@ -1,24 +1,5 @@
-#include<iostream>
-#include<memory>
-#include<vector>
-#include<string>//用于文件名
-#include<cstdlib>//用于srand()和rand()
-#include<ctime>//用于time()
-#include<iomanip>//格式化
-#include<sstream>
-#include "Grid_Construction\GridAndParticleSystem.h"
-#include "Scene\SceneManager.hpp"
-#include "Boundary\SolidBoundary.hpp"
-#include "Solver\solver.hpp"
-#include "Advection\advection.hpp"
-#include "Force\General_Force\GravityForce.hpp"
-#include "IO\DataExporter.h"
-#include "Grid_Construction\SDFUtils.hpp"
-#include "Scene\Geometry\Sphere.hpp"
-#include "Advection\FLIP.hpp"
-#include "Scene\Emitters\BoxEmitter.hpp"
-#include "Scene\Surface\MarchingCubes.h"
-#include "Scene\Surface\TriangleMesh.hpp"
+
+#include "index.h"
 
 void apply_pressure_gradient(MACGrid& grid, float dt){
     const int nx = grid.getDimX();
@@ -117,15 +98,15 @@ int main(){
     MACGrid grid(resolution, resolution, resolution, dx);
     std::unique_ptr<BoundaryCondition> boundary = std::make_unique<SolidBoundary>();
     std::vector<std::unique_ptr<ExternalForce>> forces;
-    forces.emplace_back(std::make_unique<GravityForce>(Vector3D(0.0f, -9.81f, 0.0f))); //添加重力
+    forces.emplace_back(std::make_unique<GravityForce>(Vector3f(0.0f, -9.81f, 0.0f))); //添加重力
     
     //创建粒子发射器
     std::vector<std::unique_ptr<ParticleEmitter>> emitters;
     emitters.emplace_back(std::make_unique<BoxEmitter>(
-        Vector3D(0.4,0.8,0.4),//发射区域的最小角
-        Vector3D(0.6,1.0,0.6),//发射区域的最大角
+        Vector3f(0.4,0.8,0.4),//发射区域的最小角
+        Vector3f(0.6,1.0,0.6),//发射区域的最大角
         2000.0f,
-        Vector3D(0.0,-1.0,0.0)//初始速度向下
+        Vector3f(0.0,-1.0,0.0)//初始速度向下
     ));
     //模拟参数
     const float dt = 0.01f; //时间步长
@@ -142,10 +123,10 @@ int main(){
     mc.init_all();
     //2. 设置场景
     SceneManager::createFishTank(grid, 0.2f);
-    Sphere solid_sphere(Vector3D(0.5, 0.5, 0.5), 0.15);
+    BoxShape solid_box(Point3f(0.5f, 0.5f, 0.5f), Point3f(0.3f, 0.2f, 0.15f));
 
     #if USE_FVM_SOLVER
-        computeFractions(grid, solid_sphere, 4); 
+        computeFractions(grid, solid_box, 4); 
     #endif
 
     //3. 主模拟循环
@@ -203,7 +184,7 @@ int main(){
         //G2P
         FLIPSolver::GridToParticle(grid, u_old, v_old, w_old, flip_alpha);
         //平流粒子
-        Advector::advect_particles(grid, solid_sphere, dt);
+        Advector::advect_particles(grid,solid_box, dt);
         //水平集更新
         updateLiquidSDFFromParticles(grid);
         updateCellTypesFromSDF(grid);
@@ -260,7 +241,7 @@ int main(){
                             float jitter_y = (static_cast<float>(rand()) / RAND_MAX);
                             float jitter_z = (static_cast<float>(rand()) / RAND_MAX);
                             
-                            Vector3D pos = Vector3D((i + jitter_x) * grid.getDx(), (j + jitter_y) * grid.getDx(), (k + jitter_z) * grid.getDx());
+                            Point3f pos = Point3f((i + jitter_x) * grid.getDx(), (j + jitter_y) * grid.getDx(), (k + jitter_z) * grid.getDx());
 
                             // 创建新粒子并从网格插值速度
                             Particles new_p;
