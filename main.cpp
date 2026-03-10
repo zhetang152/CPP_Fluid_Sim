@@ -103,8 +103,8 @@ int main(){
     //创建粒子发射器
     std::vector<std::unique_ptr<ParticleEmitter>> emitters;
     emitters.emplace_back(std::make_unique<BoxEmitter>(
-        Vector3f(0.4,0.8,0.4),//发射区域的最小角
-        Vector3f(0.6,1.0,0.6),//发射区域的最大角
+        Point3f(0.4,0.8,0.4),//发射区域的最小角
+        Point3f(0.6,1.0,0.6),//发射区域的最大角
         2000.0f,
         Vector3f(0.0,-1.0,0.0)//初始速度向下
     ));

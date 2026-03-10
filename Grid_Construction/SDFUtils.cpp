@@ -93,7 +93,7 @@ void computeFractions(MACGrid& grid, const SolidShape& solidShape, int supersamp
 }
 
 //粒子重构SDF的实现
-void updateupdateLiquidSDFFromParticles(MACGrid& grid){
+void updateLiquidSDFFromParticles(MACGrid& grid){
     auto& liquid_phi = grid.liquid_phi();
     const auto& particles = grid.particles();
     const Float dx = grid.getDx();
