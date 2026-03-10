@@ -1,7 +1,7 @@
 #include "FLIP.h"
 #include "advection.h"
 namespace FLIPSolver {
-    void FLIPSolver::ParticleToGrid(MACGrid& grid){
+    void ParticleToGrid(MACGrid& grid){
         //1. 获取u, v, w的网格引用, 并初始化为0
         auto& u = grid.u();
         auto& v = grid.v();
@@ -104,7 +104,7 @@ namespace FLIPSolver {
             if (w_weight(i, j, k) > 1e-9) w(i, j, k) /= w_weight(i, j, k);
         }
     }
-    void GridToParticle(MACGrid& grid, const Grid<float>& u_old, const Grid<float>& v_old, const Grid<float>& w_old, float alpha=0.95f){
+    void GridToParticle(MACGrid& grid, const Grid<float>& u_old, const Grid<float>& v_old, const Grid<float>& w_old, float alpha){
         const float dx = grid.getDx();
         // 1. 预先计算速度变化量网格 (只计算一次，不放在粒子循环里)
         Grid<float> delta_u = grid.u() - u_old;
@@ -124,3 +124,4 @@ namespace FLIPSolver {
             p.velocity = vel_PIC * alpha + vel_FLIP * (1.0f - alpha);
         }
     }
+}
