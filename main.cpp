@@ -113,7 +113,7 @@ int main(){
     const float rho = 1.0f; //流体密度
     const int max_iterations = 200; //最大迭代次数
     const float tolerance = 1e-5f; //收敛容忍度
-    const float flip_alpha = 0.97f; // PIC/FLIP混合系数
+    const float flip_alpha = 0.05f; // PIC/FLIP混合系数
 
     #define USE_FVM_SOLVER 1
 

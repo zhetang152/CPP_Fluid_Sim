@@ -13,5 +13,5 @@ namespace FLIPSolver{
      *@param w_old: 上一帧的网格速度
      *@param alpha: FLIP与PIC的混合比例
     */
-   void GridToParticle(MACGrid& grid, const Grid<float>& u_old, const Grid<float>& v_old, const Grid<float>& w_old, float alpha=0.95f);
+   void GridToParticle(MACGrid& grid, const Grid<float>& u_old, const Grid<float>& v_old, const Grid<float>& w_old, float alpha);
 }
