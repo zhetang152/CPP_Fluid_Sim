@@ -18,6 +18,32 @@ constexpr Float Pi = 3.14159265358979323846;
 constexpr Float PosInfinity = std::numeric_limits<Float>::infinity();
 constexpr Float NegInfinity = -std::numeric_limits<Float>::infinity();
 
+
+inline Float AddRoundUp(Float a, Float b) {
+    return std::nextafter(a + b, PosInfinity);
+}
+inline Float AddRoundDown(Float a, Float b) {
+    return std::nextafter(a + b, NegInfinity);
+}
+inline Float SubRoundUp(Float a, Float b) {
+    return std::nextafter(a - b, PosInfinity);
+}
+inline Float SubRoundDown(Float a, Float b) {
+    return std::nextafter(a - b, NegInfinity);
+}
+inline Float MulRoundUp(Float a, Float b) {
+    return std::nextafter(a * b, PosInfinity);
+}
+inline Float MulRoundDown(Float a, Float b) {
+    return std::nextafter(a * b, NegInfinity);
+}
+inline Float DivRoundUp(Float a, Float b) {
+    return std::nextafter(a / b, PosInfinity);
+}
+inline Float DivRoundDown(Float a, Float b) {
+    return std::nextafter(a / b, NegInfinity);
+}
+
 class Interval{
 private:
     Float low;
@@ -47,40 +73,14 @@ public:
     }
 };
 
-inline Float AddRoundUp(Float a, Float b) {
-    return std::nextafter(a + b, PosInfinity);
-}
-inline Float AddRoundDown(Float a, Float b) {
-    return std::nextafter(a+b, NegInfinity);
-}
-inline Float SubRoundUp(Float a, Float b) {
-    return std::nextafter(a - b, PosInfinity);
-}
-inline Float SubRoundDown(Float a, Float b) {
-    return std::nextafter(a - b, NegInfinity);
-}
-inline Float MulRoundUp(Float a, Float b) {
-    return std::nextafter(a * b, PosInfinity);
-}
-inline Float MulRoundDown(Float a, Float b) {
-    return std::nextafter(a * b, NegInfinity);
-}
-inline Float DivRoundUp(Float a, Float b) {
-    return std::nextafter(a / b, PosInfinity);
-}
-inline Float DivRoundDown(Float a, Float b) {
-    return std::nextafter(a / b, NegInfinity);
-}
-
-
 template <typename T>
 inline constexpr T Sqr(T v) {
     return v * v;
 }
 
-
+// 2. 修复 SafeAsin 缺少返回值的警告/错误，限制其输入范围在 [-1, 1] 以保证计算安全
 inline Float SafeAsin(Float x){
-
+    return std::asin(std::clamp(x, (Float)-1.0, (Float)1.0));
 }
 
 template <typename Ta, typename Tb, typename Tc, typename Td>
