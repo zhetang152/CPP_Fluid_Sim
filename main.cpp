@@ -157,7 +157,7 @@ int main(){
             Grid<float> rhs = Solver::discrete_divergence_FVM(grid);
             // B2: 构建FVM矩阵A和预条件子
             Solver::SystemMatrix matrix(resolution, resolution, resolution);
-            Solver::buildMatrixA_FVM(matrix.Adiag, matrix.Aplus_i, matrix.Aplus_j, matrix.Aplus_k, grid, dt);
+            Solver::buildMatrixA_FVM(matrix.Adiag, matrix.Aplus_i, matrix.Aplus_j, matrix.Aplus_k, grid, grid.celltypes(), dt);
             Solver::MIC0preconditioner_FVM(matrix.precon, matrix.Adiag, matrix.Aplus_i, matrix.Aplus_j, matrix.Aplus_k, grid);
             // B3: PCG_FVM求解压力
             Solver::PCG_FVM(grid.pressure(), rhs, matrix, grid, max_iterations, tolerance);
