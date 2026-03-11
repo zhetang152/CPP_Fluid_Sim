@@ -85,12 +85,12 @@ namespace Solver {
 
                     if (cellTypes(i, j, k) == CellType::FLUID) {
                         Float diag_val = 0;
-                        if (i < nx - 1 && cellTypes(i + 1, j, k) != CellType::AIR) diag_val++;
-                        if (i > 0     && cellTypes(i - 1, j, k) != CellType::AIR) diag_val++;
-                        if (j < ny - 1 && cellTypes(i, j + 1, k) != CellType::AIR) diag_val++;
-                        if (j > 0     && cellTypes(i, j - 1, k) != CellType::AIR) diag_val++;
-                        if (k < nz - 1 && cellTypes(i, j, k + 1) != CellType::AIR) diag_val++;
-                        if (k > 0     && cellTypes(i, j, k - 1) != CellType::AIR) diag_val++;
+                        if (i < nx - 1 && cellTypes(i + 1, j, k) != CellType::SOLID) diag_val++;
+                        if (i > 0     && cellTypes(i - 1, j, k) != CellType::SOLID) diag_val++;
+                        if (j < ny - 1 && cellTypes(i, j + 1, k) != CellType::SOLID) diag_val++;
+                        if (j > 0     && cellTypes(i, j - 1, k) != CellType::SOLID) diag_val++;
+                        if (k < nz - 1 && cellTypes(i, j, k + 1) != CellType::SOLID) diag_val++;
+                        if (k > 0     && cellTypes(i, j, k - 1) != CellType::SOLID) diag_val++;
                         
                         Adiag(i,j,k) = diag_val * scale;
 
@@ -286,45 +286,58 @@ namespace Solver {
                         Float diag_val = 0.0f;
                         //x方向
                         // 右侧
-                        if (i < nx -1 && volume_frac(i + 1, j, k) > 0.0f){
+                        if (i < nx -1){
                             Float rho_face = 0.5 * (density(i, j, k) + density(i + 1, j, k));
                             Float scale_face = dt / (rho_face * dx * dx);
-                            Aplus_i(i, j, k) = -scale_face * u_area(i + 1, j, k);
-                            diag_val += scale_face * u_area(i + 1, j, k);
+                            Float term = scale_face * u_area(i + 1, j, k);
+                            diag_val += term;
+                            if (volume_frac(i + 1, j, k) > 0.0f) { 
+                                // 只有邻居是流体，才在矩阵里把两者的压力未知数连接起来
+                                Aplus_i(i, j, k) = -term;
+                            }
                         }
                         // 左侧
-                        if (i > 0 && volume_frac(i - 1, j, k) > 0.0f){
+                        if (i > 0){
                             Float rho_face = 0.5 * (density(i, j, k) + density(i - 1, j, k));
                             Float scale_face = dt / (rho_face * dx * dx);
-                            diag_val += scale_face * u_area(i, j, k);
+                            Float term = scale_face * u_area(i, j, k);
+                            diag_val += term;
                         }
                         //y方向
                         // 上侧
-                        if (j < ny - 1 && volume_frac(i, j + 1, k) > 0.0f) {
+                        if (j < ny - 1) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j + 1, k));
                             Float scale_face = dt / (rho_face * dx * dx);
-                            Aplus_j(i, j, k) = -scale_face * v_area(i, j + 1, k);
-                            diag_val += scale_face * v_area(i, j + 1, k);
+                            Float term = scale_face * v_area(i, j + 1, k);
+                            diag_val += term;
+                            if (volume_frac(i, j + 1, k) > 0.0f) { 
+                                Aplus_j(i, j, k) = -term;
+                            }
                         }
                         // 下侧
-                        if (j > 0 && volume_frac(i, j - 1, k) > 0.0f) {
+                        if (j > 0) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j - 1, k));
                             Float scale_face = dt / (rho_face * dx * dx);
-                            diag_val += scale_face * v_area(i, j, k);
+                            Float term = scale_face * v_area(i, j, k);
+                            diag_val += term;
                         }
                         //z方向
                         // 前侧
-                        if (k < nz - 1 && volume_frac(i, j, k + 1) > 0.0f) {
+                        if (k < nz - 1) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k + 1));
                             Float scale_face = dt / (rho_face * dx * dx);
-                            Aplus_k(i, j, k) = -scale_face * w_area(i, j, k + 1);
-                            diag_val += scale_face * w_area(i, j, k + 1);
+                            Float term = scale_face * w_area(i, j, k + 1);
+                            diag_val += term;
+                            if (volume_frac(i, j, k + 1) > 0.0f) { 
+                                Aplus_k(i, j, k) = -term;
+                            }
                         }
                         // 后侧
-                        if (k > 0 && volume_frac(i, j, k - 1) > 0.0f) {
+                        if (k > 0) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k - 1));
                             Float scale_face = dt / (rho_face * dx * dx);
-                            diag_val += scale_face * w_area(i, j, k);
+                            Float term = scale_face * w_area(i, j, k);
+                            diag_val += term;
                         }
                         if (diag_val == 0.0f) {
                             //给孤立流体赋予一个安全的伪对角线值以防矩阵奇异
