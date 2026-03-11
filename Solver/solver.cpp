@@ -172,11 +172,12 @@ namespace Solver {
         int nx = a.getWidth();
         int ny = a.getHeight();
         int nz = a.getDepth();
+        const auto& celltypes = grid.celltypes();
         const auto& volumeFractions = grid.volumeFractions();
         for (int k = 0; k < nz; ++k) {
             for (int j = 0; j < ny; ++j) {
                 for (int i = 0; i < nx; ++i) {
-                    if (volumeFractions(i, j, k) > 0.0f) {
+                    if(celltypes(i, j, k) == CellType::FLUID){
                         result += a(i, j, k) * b(i, j, k);// * volumeFractions(i, j, k)去掉为了保证PCG对称性
                     }
                 }
@@ -188,12 +189,13 @@ namespace Solver {
         int nx = y.getWidth();
         int ny = y.getHeight();
         int nz = y.getDepth();
+        const auto& celltypes = grid.celltypes();
         const auto& volumeFractions = grid.volumeFractions();
         for(int k = 0; k < nz; ++k){
             for(int j = 0; j < ny; ++j){
                 for(int i = 0; i < nx; ++i){
                     //判断标准改为体积分数
-                    if(volumeFractions(i, j, k) > 0.0f) {
+                    if(celltypes(i, j, k) == CellType::FLUID){
                         y(i, j, k) += a * x(i, j, k);
                     }
                 }
@@ -215,12 +217,12 @@ namespace Solver {
         const auto& v_area = grid.area_v();
         const auto& w_area = grid.area_w();
         
-        const auto& volumeFractions = grid.volumeFractions();
+        const auto& celltypes = grid.celltypes();
         const auto& solidVelocity = grid.solidvelocity();
         for (int k = 0; k < nz; ++k) {
             for (int j = 0; j < ny; ++j) {
                 for (int i = 0; i < nx; ++i) {
-                    if (volumeFractions(i, j, k) > 0.0f) {
+                    if (celltypes(i, j, k) == CellType::FLUID) {
                         Float fluid_flux = 
                             (u(i + 1, j, k) * u_area(i + 1, j, k) - u(i, j, k) * u_area(i, j, k)) +
                             (v(i, j + 1, k) * v_area(i, j + 1, k) - v(i, j, k) * v_area(i, j, k)) +
@@ -264,6 +266,7 @@ namespace Solver {
         Grid<Float>& Aplus_j, 
         Grid<Float>& Aplus_k,
         const MACGrid& grid,
+        const Grid<CellType>& cellTypes,//传入cellTypes以界定流体域
         Float dt
     ){
         int nx = grid.getDimX();
@@ -273,7 +276,6 @@ namespace Solver {
         const auto& u_area = grid.area_u();
         const auto& v_area = grid.area_v();
         const auto& w_area = grid.area_w();
-        const auto& volume_frac = grid.volumeFractions();
         const auto& density = grid.density();
         for (int k = 0; k < nz; ++k){
             for (int j = 0; j < ny; ++j){
@@ -282,7 +284,7 @@ namespace Solver {
                     Aplus_i(i, j, k) = 0.0f;
                     Aplus_j(i, j, k) = 0.0f;
                     Aplus_k(i, j, k) = 0.0f;
-                    if (volume_frac(i ,j, k) > 0.0f){
+                    if (cellTypes(i ,j, k) == CellType::FLUID){
                         Float diag_val = 0.0f;
                         //x方向
                         // 右侧
@@ -291,7 +293,7 @@ namespace Solver {
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * u_area(i + 1, j, k);
                             diag_val += term;
-                            if (volume_frac(i + 1, j, k) > 0.0f) { 
+                            if (cellTypes(i + 1, j, k) == CellType::FLUID){ 
                                 // 只有邻居是流体，才在矩阵里把两者的压力未知数连接起来
                                 Aplus_i(i, j, k) = -term;
                             }
@@ -310,7 +312,7 @@ namespace Solver {
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * v_area(i, j + 1, k);
                             diag_val += term;
-                            if (volume_frac(i, j + 1, k) > 0.0f) { 
+                            if (cellTypes(i, j + 1, k) == CellType::FLUID) { 
                                 Aplus_j(i, j, k) = -term;
                             }
                         }
@@ -328,7 +330,7 @@ namespace Solver {
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * w_area(i, j, k + 1);
                             diag_val += term;
-                            if (volume_frac(i, j, k + 1) > 0.0f) { 
+                            if (cellTypes(i, j, k + 1) == CellType::FLUID) { 
                                 Aplus_k(i, j, k) = -term;
                             }
                         }
@@ -362,36 +364,36 @@ namespace Solver {
         int nx = result.getWidth();
         int ny = result.getHeight();
         int nz = result.getDepth();
-        const auto& volumeFraction = grid.volumeFractions();
+        const auto& cellTypes = grid.celltypes();
         for (int k = 0; k < nz; ++k) {
             for (int j = 0; j < ny; ++j) {
                 for (int i = 0; i < nx; ++i) {
-                    if (grid.volumeFractions()(i, j, k) > 0.0f) {
+                    if (cellTypes(i, j, k) == CellType::FLUID) {
                         // 1. 对角线部分 A(i,j,k),(i,j,k) * p(i,j,k)
                         Float val = Adiag(i, j, k) * p(i, j, k);
 
                         // 2. 非对角线部分（邻居的影响）
                         // X方向
-                        if (i < nx - 1 && volumeFraction(i + 1, j, k) > 0.0f) {
+                        if (i < nx - 1 && cellTypes(i + 1, j, k) == CellType::FLUID) {
                         val += Aplus_i(i, j, k) * p(i + 1, j, k);
                         }
-                        if (i > 0 && volumeFraction(i - 1, j, k) > 0.0f) {
+                        if (i > 0 && cellTypes(i - 1, j, k) == CellType::FLUID) {
                             val += Aplus_i(i - 1, j, k) * p(i - 1, j, k);
                         }
 
                         // Y方向
-                        if (j < ny - 1 && volumeFraction(i, j + 1, k) > 0.0f) {
+                        if (j < ny - 1 && cellTypes(i, j + 1, k) == CellType::FLUID) {
                             val += Aplus_j(i, j, k) * p(i, j + 1, k);
                         }
-                        if (j > 0 && volumeFraction(i, j - 1, k) > 0.0f) {
+                        if (j > 0 && cellTypes(i, j - 1, k) == CellType::FLUID) {
                             val += Aplus_j(i, j - 1, k) * p(i, j - 1, k);
                         }
 
                         // Z方向
-                        if (k < nz - 1 && volumeFraction(i, j, k + 1) > 0.0f) {
+                        if (k < nz - 1 && cellTypes(i, j, k + 1) == CellType::FLUID) {
                             val += Aplus_k(i, j, k) * p(i, j, k + 1);
                         }
-                        if (k > 0 && volumeFraction(i, j, k - 1) > 0.0f) {
+                        if (k > 0 && cellTypes(i, j, k - 1) == CellType::FLUID) {
                             val += Aplus_k(i, j, k - 1) * p(i, j, k - 1);
                         }
 
@@ -532,39 +534,38 @@ namespace Solver {
         const Float tau = 0.97f;
         const Float sgm = 0.25f;
 
-        const auto& volumeFraction = grid.volumeFractions();
+        const auto& cellTypes = grid.celltypes();
 
         for(int k = 0; k < nz; ++k){
             for(int j = 0; j < ny; ++j){
                 for(int i = 0; i < nx; ++i){
-                    //判断标准改为体积分数
-                    if(volumeFraction(i, j, k) > 0.0f){
+                    if(cellTypes(i, j, k) == CellType::FLUID){
                         
                         Float term_i_sq = 0.0f, term_j_sq = 0.0f, term_k_sq = 0.0f;
 
-                        if (i > 0 && volumeFraction(i - 1, j, k) > 0.0f) {
+                        if (i > 0 && cellTypes(i - 1, j, k) == CellType::FLUID) {
                             Float precon_val = precon(i - 1, j, k);
                             term_i_sq = (Aplus_i(i - 1, j, k) * precon_val) * (Aplus_i(i - 1, j, k) * precon_val);
                         }
-                        if (j > 0 && volumeFraction(i, j - 1, k) > 0.0f) {
+                        if (j > 0 && cellTypes(i, j - 1, k) == CellType::FLUID) {
                             Float precon_val = precon(i, j - 1, k);
                             term_j_sq = (Aplus_j(i, j - 1, k) * precon_val) * (Aplus_j(i, j - 1, k) * precon_val);
                         }
-                        if (k > 0 && volumeFraction(i, j, k - 1) > 0.0f) {
+                        if (k > 0 && cellTypes(i, j, k - 1) == CellType::FLUID) {
                             Float precon_val = precon(i, j, k - 1);
                             term_k_sq = (Aplus_k(i, j, k - 1) * precon_val) * (Aplus_k(i, j, k - 1) * precon_val);
                         }
                         
                         Float comp_i = 0.0f, comp_j = 0.0f, comp_k = 0.0f;
-                        if (i > 0 && volumeFraction(i - 1, j, k) > 0.0f) {
+                        if (i > 0 && cellTypes(i - 1, j, k) == CellType::FLUID) {
                             Float precon_sq = precon(i - 1, j, k) * precon(i - 1, j, k);
                             comp_i = Aplus_i(i - 1, j, k) * (Aplus_j(i - 1, j, k) + Aplus_k(i - 1, j, k)) * precon_sq;
                         }
-                        if (j > 0 && volumeFraction(i, j - 1, k) > 0.0f) {
+                        if (j > 0 && cellTypes(i, j - 1, k) == CellType::FLUID) {
                             Float precon_sq = precon(i, j - 1, k) * precon(i, j - 1, k);
                             comp_j = Aplus_j(i, j - 1, k) * (Aplus_i(i, j - 1, k) + Aplus_k(i, j - 1, k)) * precon_sq;
                         }
-                        if (k > 0 && volumeFraction(i, j, k - 1) > 0.0f) {
+                        if (k > 0 && cellTypes(i, j, k - 1) == CellType::FLUID) {
                             Float precon_sq = precon(i, j, k - 1) * precon(i, j, k - 1);
                             comp_k = Aplus_k(i, j, k - 1) * (Aplus_i(i, j, k - 1) + Aplus_j(i, j, k - 1)) * precon_sq;
                         }
@@ -598,22 +599,22 @@ namespace Solver {
         int nz = z.getDepth();
         Grid<Float> q(nx, ny, nz, 0.0f);
         
-        const auto& volumeFraction = grid.volumeFractions();
+        const auto& cellTypes = grid.celltypes();
 
         // 前向替换, 求解 Lq = r
         for(int k = 0; k < nz; ++k){
             for(int j = 0; j < ny; ++j){
                 for(int i = 0; i < nx; ++i){
                     //判断标准改为体积分数
-                    if(volumeFraction(i, j, k) > 0.0f){
+                    if(cellTypes(i, j, k) == CellType::FLUID){
                         Float offdiag_sum = 0.0f;
-                        if (i > 0 && volumeFraction(i - 1, j, k) > 0.0f) {
+                        if (i > 0 && cellTypes(i - 1, j, k) == CellType::FLUID) {
                             offdiag_sum += Aplus_i(i - 1, j, k) * precon(i - 1, j, k) * q(i - 1, j, k);
                         }
-                        if (j > 0 && volumeFraction(i, j - 1, k) > 0.0f) {
+                        if (j > 0 && cellTypes(i, j - 1, k) == CellType::FLUID) {
                             offdiag_sum += Aplus_j(i, j - 1, k) * precon(i, j - 1, k) * q(i, j - 1, k);
                         }
-                        if (k > 0 && volumeFraction(i, j, k - 1) > 0.0f) {
+                        if (k > 0 && cellTypes(i, j, k - 1) == CellType::FLUID) {
                             offdiag_sum += Aplus_k(i, j, k - 1) * precon(i, j, k - 1) * q(i, j, k - 1);
                         }
                         Float t = r(i, j, k) - offdiag_sum;
@@ -627,15 +628,15 @@ namespace Solver {
         for(int k = nz - 1; k >= 0; --k){
             for(int j = ny - 1; j >= 0; --j){
                 for(int i = nx - 1; i >= 0; --i){
-                    if(volumeFraction(i, j, k) > 0.0f){
+                    if(cellTypes(i, j, k) == CellType::FLUID){
                         Float offdiag_sum = 0.0f;
-                        if (i < nx - 1 && volumeFraction(i + 1, j, k) > 0.0f) {
+                        if (i < nx - 1 && cellTypes(i + 1, j, k) == CellType::FLUID) {
                             offdiag_sum += Aplus_i(i, j, k) * precon(i, j, k) * z(i + 1, j, k);
                         }
-                        if (j < ny - 1 && volumeFraction(i, j + 1, k) > 0.0f) {
+                        if (j < ny - 1 && cellTypes(i, j + 1, k) == CellType::FLUID) {
                             offdiag_sum += Aplus_j(i, j, k) * precon(i, j, k) * z(i, j + 1, k);
                         }
-                        if (k < nz - 1 && volumeFraction(i, j, k + 1) > 0.0f) {
+                        if (k < nz - 1 && cellTypes(i, j, k + 1) == CellType::FLUID) {
                             offdiag_sum += Aplus_k(i, j, k) * precon(i, j, k) * z(i, j, k + 1);
                         }
                         Float t = q(i, j, k) - offdiag_sum;

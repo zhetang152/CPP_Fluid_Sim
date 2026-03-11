@@ -115,7 +115,7 @@ int main(){
     const float tolerance = 1e-5f; //收敛容忍度
     const float flip_alpha = 0.05f; // PIC/FLIP混合系数
 
-    #define USE_FVM_SOLVER 0
+    #define USE_FVM_SOLVER 1
 
     //创建并初始化marching cubes实例
     MarchingCubes mc(resolution, resolution, resolution);
@@ -233,7 +233,9 @@ int main(){
             for (int j = 0; j < grid.getDimY(); ++j) {
                 for (int i = 0; i < grid.getDimX(); ++i) {
                     // 只在流体单元格中考虑补充
-                    if (grid.celltypes()(i, j, k) == CellType::FLUID && particle_counts(i, j, k) < min_particles_per_cell) {
+                    if (grid.celltypes()(i, j, k) == CellType::FLUID && 
+                        grid.liquid_phi()(i, j, k) < -0.5f * grid.getDx() && 
+                        particle_counts(i, j, k) < min_particles_per_cell) {
                         int num_to_add = min_particles_per_cell - particle_counts(i, j, k);
                         for (int n = 0; n < num_to_add; ++n) {
                             // 使用抖动随机创建新粒子
