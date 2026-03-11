@@ -292,10 +292,12 @@ namespace Solver {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i + 1, j, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * u_area(i + 1, j, k);
-                            diag_val += term;
                             if (cellTypes(i + 1, j, k) == CellType::FLUID){ 
                                 // 只有邻居是流体，才在矩阵里把两者的压力未知数连接起来
+                                diag_val += term;
                                 Aplus_i(i, j, k) = -term;
+                            }else if (cellTypes(i + 1, j, k) != CellType::SOLID){
+                                diag_val += term;
                             }
                         }
                         // 左侧
@@ -303,7 +305,9 @@ namespace Solver {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i - 1, j, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * u_area(i, j, k);
-                            diag_val += term;
+                            if (cellTypes(i - 1, j, k) != CellType::SOLID) {
+                                diag_val += term;
+                            }
                         }
                         //y方向
                         // 上侧
@@ -311,17 +315,21 @@ namespace Solver {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j + 1, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * v_area(i, j + 1, k);
-                            diag_val += term;
                             if (cellTypes(i, j + 1, k) == CellType::FLUID) { 
-                                Aplus_j(i, j, k) = -term;
-                            }
+                                    diag_val += term;
+                                    Aplus_j(i, j, k) = -term;
+                                } else if (cellTypes(i, j + 1, k) != CellType::SOLID) {
+                                    diag_val += term;
+                                }
                         }
                         // 下侧
                         if (j > 0) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j - 1, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * v_area(i, j, k);
-                            diag_val += term;
+                            if (cellTypes(i, j - 1, k) != CellType::SOLID) {
+                                    diag_val += term;
+                                }
                         }
                         //z方向
                         // 前侧
@@ -331,15 +339,20 @@ namespace Solver {
                             Float term = scale_face * w_area(i, j, k + 1);
                             diag_val += term;
                             if (cellTypes(i, j, k + 1) == CellType::FLUID) { 
-                                Aplus_k(i, j, k) = -term;
-                            }
+                                    diag_val += term;
+                                    Aplus_k(i, j, k) = -term;
+                                } else if (cellTypes(i, j, k + 1) != CellType::SOLID) {
+                                    diag_val += term;
+                                }
                         }
                         // 后侧
                         if (k > 0) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k - 1));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * w_area(i, j, k);
-                            diag_val += term;
+                            if (cellTypes(i, j, k - 1) != CellType::SOLID) {
+                                diag_val += term;
+                            }
                         }
                         if (diag_val == 0.0f) {
                             //给孤立流体赋予一个安全的伪对角线值以防矩阵奇异
