@@ -97,6 +97,12 @@ namespace Solver {
                         if (i < nx - 1 && cellTypes(i + 1, j, k) == CellType::FLUID) Aplus_i(i,j,k) = -scale;
                         if (j < ny - 1 && cellTypes(i, j + 1, k) == CellType::FLUID) Aplus_j(i,j,k) = -scale;
                         if (k < nz - 1 && cellTypes(i, j, k + 1) == CellType::FLUID) Aplus_k(i,j,k) = -scale;
+
+                        if (diag_val == 0.0f){
+                            Adiag(i,j,k) = scale;
+                        }else{
+                            Adiag(i,j,k) = diag_val * scale;
+                        }
                     }
                 }
             }

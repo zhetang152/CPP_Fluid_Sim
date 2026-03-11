@@ -107,7 +107,7 @@ void updateLiquidSDFFromParticles(MACGrid& grid){
         for (int j = 0; j < grid.getDimY(); ++j) {
             for (int i = 0; i < grid.getDimX(); ++i) {
                 Point3f cell_center = grid.PositionOfPressure(i, j, k);
-                Float min_dist_sq = max_dist * max_dist;
+                Float min_dist_sq = max_dist;
                 //3. 找到一定范围内的最近粒子
                 for (const auto& p : particles) {
                     Float dist_sq = Length(p.position - cell_center);

@@ -115,7 +115,7 @@ int main(){
     const float tolerance = 1e-5f; //收敛容忍度
     const float flip_alpha = 0.05f; // PIC/FLIP混合系数
 
-    #define USE_FVM_SOLVER 1
+    #define USE_FVM_SOLVER 0
 
     //创建并初始化marching cubes实例
     MarchingCubes mc(resolution, resolution, resolution);
@@ -288,7 +288,7 @@ int main(){
         //end
         //输出可视化文件
         std::stringstream ss;
-        ss << "D:\\Computation\\FluidSim_result\\frame_" << std::setw(4) << std::setfill('0') << frame << ".obj";
+        ss << "D:\\Code\\XLAB\\Fluid\\result\\frame_" << std::setw(4) << std::setfill('0') << frame << ".obj";
         //若要看粒子: DataExporter::exportToObj(grid, ss.str());
         //查看表面
         DataExporter::exportMeshToObj(render_mesh, ss.str());
