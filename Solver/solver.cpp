@@ -101,7 +101,7 @@ namespace Solver {
                         if (diag_val == 0.0f){
                             Adiag(i,j,k) = scale;
                         }else{
-                            Adiag(i,j,k) = diag_val;
+                            Adiag(i,j,k) = diag_val * scale;
                         }
                     }
                 }
@@ -177,7 +177,7 @@ namespace Solver {
             for (int j = 0; j < ny; ++j) {
                 for (int i = 0; i < nx; ++i) {
                     if (volumeFractions(i, j, k) > 0.0f) {
-                        result += a(i, j, k) * b(i, j, k) * volumeFractions(i, j, k);
+                        result += a(i, j, k) * b(i, j, k);// * volumeFractions(i, j, k)去掉为了保证PCG对称性
                     }
                 }
             }
@@ -251,7 +251,7 @@ namespace Solver {
                         solid_flux -= solid_vel_back.z * (1.0f - w_area(i, j, k));
                         // 计算负散度
                         negetivedivergence(i, j, k) = 
-                            -(fluid_flux - solid_flux) / dx;
+                            -(fluid_flux + solid_flux) / dx;
                     }
                 }
             }
@@ -286,47 +286,52 @@ namespace Solver {
                         Float diag_val = 0.0f;
                         //x方向
                         // 右侧
-                        if (i < nx -1){
+                        if (i < nx -1 && volume_frac(i + 1, j, k) > 0.0f){
                             Float rho_face = 0.5 * (density(i, j, k) + density(i + 1, j, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Aplus_i(i, j, k) = -scale_face * u_area(i + 1, j, k);
                             diag_val += scale_face * u_area(i + 1, j, k);
                         }
                         // 左侧
-                        if (i > 0){
+                        if (i > 0 && volume_frac(i - 1, j, k) > 0.0f){
                             Float rho_face = 0.5 * (density(i, j, k) + density(i - 1, j, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             diag_val += scale_face * u_area(i, j, k);
                         }
                         //y方向
                         // 上侧
-                        if (j < ny - 1) {
+                        if (j < ny - 1 && volume_frac(i, j + 1, k) > 0.0f) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j + 1, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Aplus_j(i, j, k) = -scale_face * v_area(i, j + 1, k);
                             diag_val += scale_face * v_area(i, j + 1, k);
                         }
                         // 下侧
-                        if (j > 0) {
+                        if (j > 0 && volume_frac(i, j - 1, k) > 0.0f) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j - 1, k));
                             Float scale_face = dt / (rho_face * dx * dx);
                             diag_val += scale_face * v_area(i, j, k);
                         }
                         //z方向
                         // 前侧
-                        if (k < nz - 1) {
+                        if (k < nz - 1 && volume_frac(i, j, k + 1) > 0.0f) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k + 1));
                             Float scale_face = dt / (rho_face * dx * dx);
                             Aplus_k(i, j, k) = -scale_face * w_area(i, j, k + 1);
                             diag_val += scale_face * w_area(i, j, k + 1);
                         }
                         // 后侧
-                        if (k > 0) {
+                        if (k > 0 && volume_frac(i, j, k - 1) > 0.0f) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k - 1));
                             Float scale_face = dt / (rho_face * dx * dx);
                             diag_val += scale_face * w_area(i, j, k);
                         }
-                        Adiag(i, j, k) = diag_val;
+                        if (diag_val == 0.0f) {
+                            //给孤立流体赋予一个安全的伪对角线值以防矩阵奇异
+                            Adiag(i, j, k) = dt / (density(i, j, k) * dx * dx); 
+                        } else {
+                            Adiag(i, j, k) = diag_val;
+                        }
                     }
                 }
             }
