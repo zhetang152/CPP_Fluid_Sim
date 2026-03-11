@@ -101,7 +101,7 @@ namespace Solver {
                         if (diag_val == 0.0f){
                             Adiag(i,j,k) = scale;
                         }else{
-                            Adiag(i,j,k) = diag_val * scale;
+                            Adiag(i,j,k) = diag_val;
                         }
                     }
                 }
