@@ -376,7 +376,7 @@ namespace Solver {
                             Float safe_rho = density(i, j, k);
                             if (safe_rho < 1e-6f) safe_rho = rho;
                             //给孤立流体赋予一个安全的伪对角线值以防矩阵奇异
-                            Adiag(i, j, k) = dt / (density(i, j, k) * dx * dx); 
+                            Adiag(i, j, k) = dt / (safe_rho * dx * dx); 
                         } else {
                             Adiag(i, j, k) = diag_val;
                         }
