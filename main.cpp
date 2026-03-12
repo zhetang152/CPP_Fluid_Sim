@@ -42,17 +42,16 @@ void apply_pressure_gradient(MACGrid& grid, float dt){
         }
     }
 }
-void apply_pressure_gradient_FVM(MACGrid& grid, float dt) {
+void apply_pressure_gradient_FVM(MACGrid& grid, float dt, float rho) {
     const int nx = grid.getDimX();
     const int ny = grid.getDimY();
     const int nz = grid.getDimZ();
-    const float scale = dt / (grid.getDx() * grid.density()(0,0,0)); // 假设密度恒定
-
+    const Float dx = grid.getDx();
     const auto& pressure = grid.pressure();
     const auto& u_area = grid.area_u();
     const auto& v_area = grid.area_v();
     const auto& w_area = grid.area_w();
-
+    const auto& density = grid.density();
     auto& u = grid.u();
     auto& v = grid.v();
     auto& w = grid.w();
@@ -63,6 +62,9 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt) {
             for (int i = 1; i < nx; ++i) {
                 //面积分数 > 0, 就更新速度
                 if (u_area(i, j, k) > 0) {
+                    Float rho_face = 0.5f * (density(i, j, k) + density(i - 1, j, k));
+                    if (rho_face < 1e-6f) rho_face = rho;
+                    Float scale = dt / (dx * rho_face);
                     u(i, j, k) -= scale * (pressure(i, j, k) - pressure(i - 1, j, k));
                 }
             }
@@ -73,6 +75,9 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt) {
         for (int j = 1; j < ny; ++j) {
             for (int i = 0; i < nx; ++i) {
                 if (v_area(i, j, k) > 0) {
+                    Float rho_face = 0.5f * (density(i, j, k) + density(i, j - 1, k));
+                    if (rho_face < 1e-6f) rho_face = rho;
+                    Float scale = dt / (dx * rho_face);
                     v(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j - 1, k));
                 }
             }
@@ -83,6 +88,9 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt) {
         for (int j = 0; j < ny; ++j) {
             for (int i = 0; i < nx; ++i) {
                 if (w_area(i, j, k) > 0) {
+                    Float rho_face = 0.5f * (density(i, j, k) + density(i, j, k - 1));
+                    if (rho_face < 1e-6f) rho_face = rho;
+                    Float scale = dt / (dx * rho_face);
                     w(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j, k - 1));
                 }
             }
@@ -157,7 +165,7 @@ int main(){
             Grid<float> rhs = Solver::discrete_divergence_FVM(grid);
             // B2: 构建FVM矩阵A和预条件子
             Solver::SystemMatrix matrix(resolution, resolution, resolution);
-            Solver::buildMatrixA_FVM(matrix.Adiag, matrix.Aplus_i, matrix.Aplus_j, matrix.Aplus_k, grid, grid.celltypes(), dt);
+            Solver::buildMatrixA_FVM(matrix.Adiag, matrix.Aplus_i, matrix.Aplus_j, matrix.Aplus_k, grid, grid.celltypes(), dt, rho);
             Solver::MIC0preconditioner_FVM(matrix.precon, matrix.Adiag, matrix.Aplus_i, matrix.Aplus_j, matrix.Aplus_k, grid);
             // B3: PCG_FVM求解压力
             Solver::PCG_FVM(grid.pressure(), rhs, matrix, grid, max_iterations, tolerance);
@@ -174,7 +182,7 @@ int main(){
 
         //C: 更新速度
         #if USE_FVM_SOLVER
-            apply_pressure_gradient_FVM(grid, dt);
+            apply_pressure_gradient_FVM(grid, dt,rho);
         #else
             apply_pressure_gradient(grid, dt);
         #endif

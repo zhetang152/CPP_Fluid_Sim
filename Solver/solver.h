@@ -49,7 +49,8 @@ namespace Solver {
         Grid<Float>& Aplus_k,
         const MACGrid& grid,
         const Grid<CellType>& cellTypes,
-        Float dt
+        Float dt,
+        Float rho
     );
     void applyA_FVM(
         Grid<Float>& result, 

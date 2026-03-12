@@ -267,7 +267,8 @@ namespace Solver {
         Grid<Float>& Aplus_k,
         const MACGrid& grid,
         const Grid<CellType>& cellTypes,//传入cellTypes以界定流体域
-        Float dt
+        Float dt,
+        Float rho
     ){
         int nx = grid.getDimX();
         int ny = grid.getDimY();
@@ -290,6 +291,9 @@ namespace Solver {
                         // 右侧
                         if (i < nx -1){
                             Float rho_face = 0.5 * (density(i, j, k) + density(i + 1, j, k));
+                            if (rho_face < 1e-6f) {
+                                rho_face = rho;
+                            }
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * u_area(i + 1, j, k);
                             if (cellTypes(i + 1, j, k) == CellType::FLUID){ 
@@ -303,6 +307,9 @@ namespace Solver {
                         // 左侧
                         if (i > 0){
                             Float rho_face = 0.5 * (density(i, j, k) + density(i - 1, j, k));
+                            if (rho_face < 1e-6f) {
+                                rho_face = rho;
+                            }
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * u_area(i, j, k);
                             if (cellTypes(i - 1, j, k) != CellType::SOLID) {
@@ -313,6 +320,9 @@ namespace Solver {
                         // 上侧
                         if (j < ny - 1) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j + 1, k));
+                            if (rho_face < 1e-6f) {
+                                rho_face = rho;
+                            }
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * v_area(i, j + 1, k);
                             if (cellTypes(i, j + 1, k) == CellType::FLUID) { 
@@ -325,6 +335,9 @@ namespace Solver {
                         // 下侧
                         if (j > 0) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j - 1, k));
+                            if (rho_face < 1e-6f) {
+                                rho_face = rho;
+                            }
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * v_area(i, j, k);
                             if (cellTypes(i, j - 1, k) != CellType::SOLID) {
@@ -335,9 +348,11 @@ namespace Solver {
                         // 前侧
                         if (k < nz - 1) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k + 1));
+                            if (rho_face < 1e-6f) {
+                                rho_face = rho;
+                            }
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * w_area(i, j, k + 1);
-                            diag_val += term;
                             if (cellTypes(i, j, k + 1) == CellType::FLUID) { 
                                     diag_val += term;
                                     Aplus_k(i, j, k) = -term;
@@ -348,6 +363,9 @@ namespace Solver {
                         // 后侧
                         if (k > 0) {
                             Float rho_face = 0.5 * (density(i, j, k) + density(i, j, k - 1));
+                            if (rho_face < 1e-6f) {
+                                rho_face = rho;
+                            }
                             Float scale_face = dt / (rho_face * dx * dx);
                             Float term = scale_face * w_area(i, j, k);
                             if (cellTypes(i, j, k - 1) != CellType::SOLID) {
@@ -355,6 +373,8 @@ namespace Solver {
                             }
                         }
                         if (diag_val == 0.0f) {
+                            Float safe_rho = density(i, j, k);
+                            if (safe_rho < 1e-6f) safe_rho = rho;
                             //给孤立流体赋予一个安全的伪对角线值以防矩阵奇异
                             Adiag(i, j, k) = dt / (density(i, j, k) * dx * dx); 
                         } else {
@@ -735,7 +755,6 @@ namespace Solver {
         int nz = p.getDepth();
         // 初始化残差
         Grid<Float> r(nx, ny, nz, 0.0f);
-        r = b;
         // 计算初始残差范数用于收敛判断
         //调用 FVM 版本的dotProduct
         Float initial_residual_norm = std::sqrt(dotProduct_FVM(r, r, grid));
