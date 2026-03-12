@@ -755,7 +755,7 @@ namespace Solver {
         int nz = p.getDepth();
         // 初始化残差
         Grid<Float> r(nx, ny, nz, 0.0f);
-        // 计算初始残差范数用于收敛判断
+        r = b;
         //调用 FVM 版本的dotProduct
         Float initial_residual_norm = std::sqrt(dotProduct_FVM(r, r, grid));
         if (initial_residual_norm < 1e-9) {
