@@ -234,7 +234,7 @@ int main(){
                 }
                 return false;
             }), particles.end());
-
+        /*
         //在稀疏区域补充新粒子 (重播种)
         std::vector<Particles> new_particles;
         for (int k = 0; k < grid.getDimZ(); ++k) {
@@ -265,6 +265,7 @@ int main(){
         }
         // 将所有新创建的粒子一次性加入主列表
         particles.insert(particles.end(), new_particles.begin(), new_particles.end());
+        */
         //A. 从SDF生成用于渲染的三角网格
         mc.reset();
         //B. 将SDF数据传输到MarchingCubes
