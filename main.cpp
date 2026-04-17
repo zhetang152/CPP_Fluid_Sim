@@ -142,11 +142,11 @@ int main(){
         Vector3f(0.0,-1.0,0.0)//初始速度向下
     ));
     //模拟参数
-    const float dt = 0.01f; //时间步长
+    const float dt = 0.0025f; //时间步长
     const float rho = 1.0f; //流体密度
     const int max_iterations = 200; //最大迭代次数
     const float tolerance = 1e-5f; //收敛容忍度
-    const float flip_alpha = 0.05f; // PIC/FLIP混合系数
+    const float flip_alpha = 0.15f; // PIC/FLIP混合系数
 
     #define USE_FVM_SOLVER 1
 
@@ -253,7 +253,28 @@ int main(){
         //G2P
         FLIPSolver::GridToParticle(grid, u_old, v_old, w_old, flip_alpha);
         //平流粒子
-        Advector::advect_particles(grid,solid_box, dt);
+        Advector::advect_particles(grid, solid_box, dt);
+        const float margin = 0.001f; // 留出一点安全边距
+        const float max_x = grid.getDimX() * grid.getDx() - margin;
+        const float max_y = grid.getDimY() * grid.getDx() - margin;
+        const float max_z = grid.getDimZ() * grid.getDx() - margin;
+        const float max_speed = 15.0f; // 设定一个合理的最大速度物理上限
+
+        for (auto& p : grid.particles()) {
+            // 1. 强制钳制坐标，绝对不允许粒子飞出网格导致数组越界
+            p.position.x = std::max(margin, std::min(p.position.x, max_x));
+            p.position.y = std::max(margin, std::min(p.position.y, max_y));
+            p.position.z = std::max(margin, std::min(p.position.z, max_z));
+
+            // 2. 强制钳制极端速度，防止单个数值爆炸污染整个网格
+            float speed_sq = p.velocity.x * p.velocity.x + 
+                             p.velocity.y * p.velocity.y + 
+                             p.velocity.z * p.velocity.z;
+            if (speed_sq > max_speed * max_speed) {
+                float speed = std::sqrt(speed_sq);
+                p.velocity = p.velocity * (max_speed / speed);
+            }
+        }
         //水平集更新
         updateLiquidSDFFromParticles(grid);
         updateCellTypesFromSDF(grid);
