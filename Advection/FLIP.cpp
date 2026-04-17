@@ -19,9 +19,9 @@ namespace FLIPSolver {
             //获取粒子位置u方向
             const Point3f& u_pos = particle.position / dx;
             //计算粒子在网格中的索引
-            int ui = static_cast<int>(u_pos.x);
-            int uj = static_cast<int>(u_pos.y-0.5f);
-            int uk = static_cast<int>(u_pos.z-0.5f);//这是在干什么-0.5?
+            int ui = static_cast<int>(std::floor(u_pos.x));
+            int uj = static_cast<int>(std::floor(u_pos.y - 0.5f));
+            int uk = static_cast<int>(std::floor(u_pos.z - 0.5f));
             for(int k = 0; k<= 1; ++k){
                 for(int j = 0; j<= 1; ++j){
                     for(int i = 0; i<= 1; ++i){

@@ -16,7 +16,11 @@ void apply_pressure_gradient(MACGrid& grid, float dt){
         for (int j = 0; j < ny; ++j) {
             for (int i = 1; i < nx; ++i) {
                 if (celltypes(i, j, k) == CellType::FLUID || celltypes(i-1, j, k) == CellType::FLUID) {
-                    u(i, j, k) -= scale * (pressure(i, j, k) - pressure(i - 1, j, k));
+                    Float p_center = pressure(i, j, k);
+                    Float p_left = pressure(i - 1, j, k);
+                    if (celltypes(i, j, k) == CellType::SOLID) p_center = p_left;
+                    if (celltypes(i - 1, j, k) == CellType::SOLID) p_left = p_center;
+                    u(i, j, k) -= scale * (p_center - p_left);
                 }
             }
         }
@@ -26,7 +30,11 @@ void apply_pressure_gradient(MACGrid& grid, float dt){
         for (int j = 1; j < ny; ++j) {
             for (int i = 0; i < nx; ++i) {
                 if (celltypes(i, j, k) == CellType::FLUID || celltypes(i, j-1, k) == CellType::FLUID) {
-                    v(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j - 1, k));
+                    Float p_center = pressure(i, j, k);
+                    Float p_bottom = pressure(i, j - 1, k);
+                    if (celltypes(i, j, k) == CellType::SOLID) p_center = p_bottom;
+                    if (celltypes(i, j - 1, k) == CellType::SOLID) p_bottom = p_center;
+                    v(i, j, k) -= scale * (p_center - p_bottom);
                 }
             }
         }
@@ -36,7 +44,11 @@ void apply_pressure_gradient(MACGrid& grid, float dt){
         for (int j = 0; j < ny; ++j) {
             for (int i = 0; i < nx; ++i) {
                 if (celltypes(i, j, k) == CellType::FLUID || celltypes(i, j, k-1) == CellType::FLUID) {
-                    w(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j, k - 1));
+                   Float p_center = pressure(i, j, k);
+                    Float p_back = pressure(i, j, k - 1);
+                    if (celltypes(i, j, k) == CellType::SOLID) p_center = p_back;
+                    if (celltypes(i, j, k - 1) == CellType::SOLID) p_back = p_center;
+                    w(i, j, k) -= scale * (p_center - p_back);
                 }
             }
         }
@@ -52,6 +64,7 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt, float rho) {
     const auto& v_area = grid.area_v();
     const auto& w_area = grid.area_w();
     const auto& density = grid.density();
+    const auto& celltypes = grid.celltypes();
     auto& u = grid.u();
     auto& v = grid.v();
     auto& w = grid.w();
@@ -64,8 +77,12 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt, float rho) {
                 if (u_area(i, j, k) > 0) {
                     Float rho_face = 0.5f * (density(i, j, k) + density(i - 1, j, k));
                     if (rho_face < 1e-6f) rho_face = rho;
-                    Float scale = dt / (dx * rho_face);
-                    u(i, j, k) -= scale * (pressure(i, j, k) - pressure(i - 1, j, k));
+                    Float scale = dt / (dx * rho_face);\
+                    Float p_center = pressure(i, j, k);
+                    Float p_left = pressure(i - 1, j, k);
+                    if (celltypes(i, j, k) == CellType::SOLID) p_center = p_left;
+                    if (celltypes(i - 1, j, k) == CellType::SOLID) p_left = p_center;
+                    u(i, j, k) -= scale * (p_center - p_left);
                 }
             }
         }
@@ -78,7 +95,11 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt, float rho) {
                     Float rho_face = 0.5f * (density(i, j, k) + density(i, j - 1, k));
                     if (rho_face < 1e-6f) rho_face = rho;
                     Float scale = dt / (dx * rho_face);
-                    v(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j - 1, k));
+                    Float p_center = pressure(i, j, k);
+                    Float p_bottom = pressure(i, j - 1, k);
+                    if (celltypes(i, j, k) == CellType::SOLID) p_center = p_bottom;
+                    if (celltypes(i, j - 1, k) == CellType::SOLID) p_bottom = p_center;
+                    v(i, j, k) -= scale * (p_center - p_bottom);
                 }
             }
         }
@@ -91,7 +112,11 @@ void apply_pressure_gradient_FVM(MACGrid& grid, float dt, float rho) {
                     Float rho_face = 0.5f * (density(i, j, k) + density(i, j, k - 1));
                     if (rho_face < 1e-6f) rho_face = rho;
                     Float scale = dt / (dx * rho_face);
-                    w(i, j, k) -= scale * (pressure(i, j, k) - pressure(i, j, k - 1));
+                    Float p_center = pressure(i, j, k);
+                    Float p_back = pressure(i, j, k - 1);
+                    if (celltypes(i, j, k) == CellType::SOLID) p_center = p_back;
+                    if (celltypes(i, j, k - 1) == CellType::SOLID) p_back = p_center;
+                    w(i, j, k) -= scale * (p_center - p_back);
                 }
             }
         }
@@ -186,7 +211,43 @@ int main(){
         #else
             apply_pressure_gradient(grid, dt);
         #endif
+        // ==========================================
+        // STEP 2 新增：强制速度截断防爆逻辑
+        // 在更新完速度后，检查并限制异常极大的速度
+        // ==========================================
+        float max_allowed_vel = 20.0f;
+        auto& u_vel = grid.u();
+        auto& v_vel = grid.v();
+        auto& w_vel = grid.w();
 
+        for (int k = 0; k < grid.getDimZ(); ++k) {
+            for (int j = 0; j < grid.getDimY(); ++j) {
+                for (int i = 0; i < grid.getDimX(); ++i) {
+                    if (std::abs(u_vel(i, j, k)) > max_allowed_vel) {
+                        u_vel(i, j, k) = (u_vel(i, j, k) > 0) ? max_allowed_vel : -max_allowed_vel;
+                    }
+                }
+            }
+        }
+        for (int k = 0; k < grid.getDimZ(); ++k) {
+            for (int j = 0; j < grid.getDimY(); ++j) {
+                for (int i = 0; i < grid.getDimX(); ++i) {
+                    if (std::abs(v_vel(i, j, k)) > max_allowed_vel) {
+                        v_vel(i, j, k) = (v_vel(i, j, k) > 0) ? max_allowed_vel : -max_allowed_vel;
+                    }
+                }
+            }
+        }
+        for (int k = 0; k < grid.getDimZ(); ++k) {
+            for (int j = 0; j < grid.getDimY(); ++j) {
+                for (int i = 0; i < grid.getDimX(); ++i) {
+                    if (std::abs(w_vel(i, j, k)) > max_allowed_vel) {
+                        w_vel(i, j, k) = (w_vel(i, j, k) > 0) ? max_allowed_vel : -max_allowed_vel;
+                    }
+                }
+            }
+        }
+        // ==========================================
         //D: 再次强制边界条件
         boundary->apply(grid);
         //G2P
@@ -210,6 +271,17 @@ int main(){
                 particle_counts(i, j, k)++;
             }
         }
+        // 2. 提前计算好每个单元格"必须"删除的粒子数量
+        Grid<int> particles_to_drop(grid.getDimX(), grid.getDimY(), grid.getDimZ(), 0);
+        for (int k = 0; k < grid.getDimZ(); ++k) {
+            for (int j = 0; j < grid.getDimY(); ++j) {
+                for (int i = 0; i < grid.getDimX(); ++i) {
+                    if (grid.celltypes()(i, j, k) == CellType::FLUID && particle_counts(i, j, k) > max_particles_per_cell) {
+                        particles_to_drop(i, j, k) = particle_counts(i, j, k) - max_particles_per_cell;
+                    }
+                }
+            }
+        }
         //删除拥堵区域的多余粒子
         auto& particles = grid.particles();
         particles.erase(std::remove_if(particles.begin(), particles.end(), 
@@ -223,13 +295,22 @@ int main(){
                 }
 
                 // 只在流体单元格中考虑删除
-                if (grid.celltypes()(i, j, k) == CellType::FLUID && particle_counts(i, j, k) > max_particles_per_cell) {
-                    // 随机删除一些，让期望数量降到max附近
-                    // 删除概率 = (当前数量 - 目标数量) / 当前数量
-                    float removal_probability = static_cast<float>(particle_counts(i, j, k) - max_particles_per_cell) / particle_counts(i, j, k);
-                    if (static_cast<float>(rand()) / RAND_MAX < removal_probability) {
-                        particle_counts(i, j, k)--; // 预减计数器，防止过度删除
-                        return true; // 返回true表示“删除这个粒子”
+
+                if (grid.celltypes()(i, j, k) == CellType::FLUID) {
+                    int& c = particle_counts(i, j, k);    // 该单元格目前还剩下几个粒子等待评估
+                    int& d = particles_to_drop(i, j, k);  // 该单元格目前还需要删除几个粒子
+
+                    if (d > 0 && c > 0) { // 如果还需要删，并且还有候选的
+                        // 计算当前这颗粒子的删除概率
+                        float prob = static_cast<float>(d) / static_cast<float>(c);
+                        c--; // 不管删不删，这个粒子评估过了，剩余候选数-1
+                        
+                        if (static_cast<float>(rand()) / RAND_MAX < prob) {
+                            d--; // 命中概率，所需删除数量-1
+                            return true; // 返回true告诉vector删除此粒子
+                        }
+                    } else if (c > 0) {
+                        c--; // 目标数量已经达标，后续粒子直接放行，但仍要减少剩余候选数
                     }
                 }
                 return false;
