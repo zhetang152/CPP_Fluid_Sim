@@ -1,10 +1,9 @@
 #include "advection.h"
+
 #include <algorithm>
+#include <cmath>
 
 namespace Advector {
-
-    // --- 底层插值辅助函数 ---
-
     float catmull_rom_1d(float p0, float p1, float p2, float p3, float t) {
         float t2 = t * t;
         float t3 = t2 * t;
@@ -17,17 +16,17 @@ namespace Advector {
     float sample_linear(const Grid<float>& grid, const Point3f& pos, float dx) {
         Point3f grid_pos = pos / dx;
 
-        int i = static_cast<int>(grid_pos.x);
-        int j = static_cast<int>(grid_pos.y);
-        int k = static_cast<int>(grid_pos.z);
-        
-        float tx = grid_pos.x - i;
-        float ty = grid_pos.y - j;
-        float tz = grid_pos.z - k;
+        float x = std::clamp(grid_pos.x, 0.0f, static_cast<float>(grid.getWidth()) - 1.0001f);
+        float y = std::clamp(grid_pos.y, 0.0f, static_cast<float>(grid.getHeight()) - 1.0001f);
+        float z = std::clamp(grid_pos.z, 0.0f, static_cast<float>(grid.getDepth()) - 1.0001f);
 
-        i = std::clamp(i, 0, grid.getWidth() - 2);
-        j = std::clamp(j, 0, grid.getHeight() - 2);
-        k = std::clamp(k, 0, grid.getDepth() - 2);
+        int i = std::clamp(static_cast<int>(std::floor(x)), 0, grid.getWidth() - 2);
+        int j = std::clamp(static_cast<int>(std::floor(y)), 0, grid.getHeight() - 2);
+        int k = std::clamp(static_cast<int>(std::floor(z)), 0, grid.getDepth() - 2);
+
+        float tx = x - i;
+        float ty = y - j;
+        float tz = z - k;
 
         float w000 = (1 - tx) * (1 - ty) * (1 - tz);
         float w100 = tx * (1 - ty) * (1 - tz);
@@ -46,14 +45,14 @@ namespace Advector {
 
     float sample_tricubic(const Grid<float>& grid, const Point3f& pos, float dx) {
         Point3f grid_pos = pos / dx;
-        
+
         float x = std::clamp(grid_pos.x, 1.0f, static_cast<float>(grid.getWidth()) - 2.0001f);
         float y = std::clamp(grid_pos.y, 1.0f, static_cast<float>(grid.getHeight()) - 2.0001f);
         float z = std::clamp(grid_pos.z, 1.0f, static_cast<float>(grid.getDepth()) - 2.0001f);
 
-        int ix = static_cast<int>(x);
-        int iy = static_cast<int>(y);
-        int iz = static_cast<int>(z);
+        int ix = static_cast<int>(std::floor(x));
+        int iy = static_cast<int>(std::floor(y));
+        int iz = static_cast<int>(std::floor(z));
 
         float tx = x - ix;
         float ty = y - iy;
@@ -64,7 +63,7 @@ namespace Advector {
             for (int j_offset = 0; j_offset < 4; ++j_offset) {
                 x_interp[k_offset][j_offset] = catmull_rom_1d(
                     grid(ix - 1, iy + j_offset - 1, iz + k_offset - 1),
-                    grid(ix    , iy + j_offset - 1, iz + k_offset - 1),
+                    grid(ix, iy + j_offset - 1, iz + k_offset - 1),
                     grid(ix + 1, iy + j_offset - 1, iz + k_offset - 1),
                     grid(ix + 2, iy + j_offset - 1, iz + k_offset - 1),
                     tx);
@@ -74,31 +73,27 @@ namespace Advector {
         float y_interp[4];
         for (int k_offset = 0; k_offset < 4; ++k_offset) {
             y_interp[k_offset] = catmull_rom_1d(
-                x_interp[k_offset][0], x_interp[k_offset][1], x_interp[k_offset][2], x_interp[k_offset][3], ty);
+                x_interp[k_offset][0],
+                x_interp[k_offset][1],
+                x_interp[k_offset][2],
+                x_interp[k_offset][3],
+                ty);
         }
 
         return catmull_rom_1d(y_interp[0], y_interp[1], y_interp[2], y_interp[3], tz);
     }
 
-    // 只管插值, 不管是哪个MACGrid里的
     Vector3f get_velocity_at(const Grid<float>& u, const Grid<float>& v, const Grid<float>& w, float dx, const Point3f& pos) {
         float u_val = sample_linear(u, Point3f(pos.x, pos.y - 0.5f * dx, pos.z - 0.5f * dx), dx);
         float v_val = sample_linear(v, Point3f(pos.x - 0.5f * dx, pos.y, pos.z - 0.5f * dx), dx);
         float w_val = sample_linear(w, Point3f(pos.x - 0.5f * dx, pos.y - 0.5f * dx, pos.z), dx);
         return Vector3f(u_val, v_val, w_val);
     }
-    // 便捷接口, 直接传MACGrid对象
+
     Vector3f get_velocity_at(const MACGrid& grid, const Point3f& pos) {
         float dx = grid.getDx();
-        
-        float u_val = sample_linear(grid.u(), Point3f(pos.x, pos.y - 0.5f * dx, pos.z - 0.5f * dx), dx);
-        float v_val = sample_linear(grid.v(), Point3f(pos.x - 0.5f * dx, pos.y, pos.z - 0.5f * dx), dx);
-        float w_val = sample_linear(grid.w(), Point3f(pos.x - 0.5f * dx, pos.y - 0.5f * dx, pos.z), dx);
-
-        return Vector3f(u_val, v_val, w_val);
+        return get_velocity_at(grid.u(), grid.v(), grid.w(), dx, pos);
     }
-
-    // --- 公共接口函数 ---
 
     Grid<float> advect(const Grid<float>& q_old, const MACGrid& velocityGrid, float dt) {
         int nx = q_old.getWidth();
@@ -110,13 +105,14 @@ namespace Advector {
         for (int k = 0; k < nz; ++k) {
             for (int j = 0; j < ny; ++j) {
                 for (int i = 0; i < nx; ++i) {
-                    Point3f pos = Point3f((i + 0.5f) * dx, (j + 0.5f) * dx, (k + 0.5f) * dx);
+                    Point3f pos((i + 0.5f) * dx, (j + 0.5f) * dx, (k + 0.5f) * dx);
                     Vector3f velocity = get_velocity_at(velocityGrid, pos);
                     Point3f departure_pos = pos - velocity * dt;
                     q_new(i, j, k) = sample_tricubic(q_old, departure_pos, dx);
                 }
             }
         }
+
         return q_new;
     }
 
@@ -131,19 +127,17 @@ namespace Advector {
                 for (int i = 0; i < grid.getDimX() + 1; ++i) {
                     Point3f u_pos = grid.positionOfU(i, j, k);
                     Vector3f vel = get_velocity_at(grid, u_pos);
-                    Point3f departure_pos = u_pos - vel * dt;
-                    grid.u()(i, j, k) = sample_linear(u_old, departure_pos, dx);
+                    grid.u()(i, j, k) = sample_linear(u_old, u_pos - vel * dt, dx);
                 }
             }
         }
-        
+
         for (int k = 0; k < grid.getDimZ(); ++k) {
             for (int j = 0; j < grid.getDimY() + 1; ++j) {
                 for (int i = 0; i < grid.getDimX(); ++i) {
                     Point3f v_pos = grid.positionOfV(i, j, k);
                     Vector3f vel = get_velocity_at(grid, v_pos);
-                    Point3f departure_pos = v_pos - vel * dt;
-                    grid.v()(i, j, k) = sample_linear(v_old, departure_pos, dx);
+                    grid.v()(i, j, k) = sample_linear(v_old, v_pos - vel * dt, dx);
                 }
             }
         }
@@ -153,8 +147,7 @@ namespace Advector {
                 for (int i = 0; i < grid.getDimX(); ++i) {
                     Point3f w_pos = grid.positionOfW(i, j, k);
                     Vector3f vel = get_velocity_at(grid, w_pos);
-                    Point3f departure_pos = w_pos - vel * dt;
-                    grid.w()(i, j, k) = sample_linear(w_old, departure_pos, dx);
+                    grid.w()(i, j, k) = sample_linear(w_old, w_pos - vel * dt, dx);
                 }
             }
         }
@@ -162,30 +155,24 @@ namespace Advector {
 
     void advect_particles(MACGrid& grid, const SolidShape& solid, float dt) {
         auto& particles = grid.particles();
-        // 定义一个很小的安全距离，防止粒子正好卡在表面
         const float particle_radius = grid.getDx() * 0.1f;
+
         for (auto& particle : particles) {
-            //RK3
-            //k1 = u(x_n)
             Vector3f k1 = get_velocity_at(grid, particle.position);
-            //k2 = u(x_n + 0.5 * dt * k1)
             Point3f mid_pos1 = particle.position + 0.5f * dt * k1;
             Vector3f k2 = get_velocity_at(grid, mid_pos1);
-            //k3 = u(x_n + 0.75 * dt * k2)
             Point3f mid_pos2 = particle.position + 0.75f * dt * k2;
             Vector3f k3 = get_velocity_at(grid, mid_pos2);
-            //x_{n+1} = x_n + dt * (2/9 * k1 + 1/3 * k2 + 4/9 * k3)
-            Point3f new_pos = particle.position + dt * ( (2.0f/9.0f) * k1 + (1.0f/3.0f) * k2 + (4.0f/9.0f) * k3);
-            //碰撞检测
+            Point3f new_pos = particle.position + dt * ((2.0f / 9.0f) * k1 + (1.0f / 3.0f) * k2 + (4.0f / 9.0f) * k3);
+
             float phi = solid.signedDistance(new_pos);
             if (phi < particle_radius) {
-                //粒子进入固体，投射到表面
                 Normal3f normal = solid.normal(new_pos);
                 particle.position = new_pos + (particle_radius - phi) * normal;
-            }else{
+            } else {
                 particle.position = new_pos;
             }
-            //边界钳制
+
             float dx = grid.getDx();
             float domain_x = grid.getDimX() * dx;
             float domain_y = grid.getDimY() * dx;
