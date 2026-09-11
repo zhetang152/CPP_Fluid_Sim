@@ -2,7 +2,7 @@
 
 ## 关于项目
 
-本项目是学习Robert Bridson的《Fluid Simulation for Computer Graphics》一书的实践成果. 旨在使用现代C++从零开始，逐步构建3D流体模拟引擎. 部分代码由AI工具Gemini, Copilot协助完成.
+本项目是学习Robert Bridson的《Fluid Simulation for Computer Graphics》一书的实践成果. 旨在使用现代C++从零开始，逐步构建3D流体模拟引擎. 部分代码由AI工具Codex协助完成.
 
 ## 复现进度: 
 ### Version 1
